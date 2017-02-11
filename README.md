@@ -3,6 +3,11 @@ About bamm-wrapper
 
 bamm-wrapper is a user friendly wrapper around tools from the baMM-suite.
 
+Dependencies
+============
+
+- sphinx-argparse (docs)
+- backports.shutil_which (python2)
 
 Installing
 ==========
@@ -13,17 +18,12 @@ bamm-wrapper is a python package and can be installed with pip.
     cd bamm-wrapper
     pip install .
 
-
 Usage
 =====
 
 bamm-wrapper installs the command line script `bamm`. Run `bamm --help` for a list of available submodules.
 
-
 License
 =======
 
 bamm-wrapper is licensed under the [GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/).
-
-
-
