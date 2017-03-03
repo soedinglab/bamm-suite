@@ -65,7 +65,7 @@ class PEnGModule(BaMMModule):
         scp = self.subcommand_parser
         scp.add_argument('fasta_file', help='file with input sequences in fasta format',
                          type=aph.file_r)
-        scp.add_argument('output_file', help='file output is written to',
+        scp.add_argument('output_file', help='output file in meme format',
                          type=aph.file_rw)
 
         basic_grp = scp.add_argument_group('basic options')
@@ -75,12 +75,16 @@ class PEnGModule(BaMMModule):
                                help='set number of parallel threads')
         basic_grp.add_argument('--pos_strand_only', '-s', action='store_true',
                                help='do not scan the reverse complement for patterns')
-        basic_grp.add_argument('--output_format', '-f', choices=['meme', 'json'], default='meme',
-                               help='file format of the output file')
+        basic_grp.add_argument('--json_outfile', '-j', type=aph.file_rw,
+                               help='output file for writing output in json format.')
         basic_grp.add_argument('--bg_order', default=1, type=aph.non_negative_integer,
                                help='order of the background model')
+        basic_grp.add_argument('--bg_fasta', type=aph.file_r,
+                               help='fasta file with sequences for training the background model')
         basic_grp.add_argument('--no_em', action='store_true',
                                help='do not optimize PWMs with em')
+        basic_grp.add_argument('--no_merge', action='store_true',
+                               help='skip pattern merging phase')
 
         tune_grp = scp.add_argument_group('tuning parameters')
         tune_grp.add_argument('--zscore_thresh', '-z', default=100, type=float,
@@ -100,6 +104,7 @@ class PEnGModule(BaMMModule):
         cmd = [
             'peng_motif',
             '%r' % args.fasta_file,
+            '-o %r' % args.output_file,
             '-t %s' % args.zscore_thresh,
             '-w %s' % args.pattern_length,
             '-bg-model-order %s' % args.bg_order,
@@ -109,12 +114,16 @@ class PEnGModule(BaMMModule):
             '-em-max-iterations %s' % args.em_max_iterations,
             '-threads %s' % args.threads,
         ]
-        if args.output_format == 'json':
-            cmd.append('-j %r' % args.output_file)
-        else:
-            cmd.append('-o %r' % args.output_file)
 
+        if args.json_outfile:
+            cmd.append('-j %r' % args.json_outfile)
         if args.pos_strand_only:
             cmd.append('-strand PLUS')
+        if args.no_em:
+            cmd.append('-no-em')
+        if args.no_merge:
+            cmd.append('-no-merging')
+        if args.bg_fasta:
+            cmd.append('-background-sequences %r' % args.bg_fasta)
 
         execute_command(cmd, debug=args.debug)

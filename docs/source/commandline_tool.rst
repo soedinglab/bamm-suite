@@ -9,6 +9,13 @@ peng
 .. argparse::
   :module: bamm_wrapper.wrapper
   :func: create_parser
+  :nodefaultconst:
   :prog: bamm
   :path: peng
+
+peng (autoprogram)
+------------------
+
+.. autoprogram:: bamm_wrapper.wrapper:create_parser()
+  :start_command: peng
 
