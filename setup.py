@@ -1,10 +1,10 @@
 from bamm_wrapper import __version__
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
-    name='bamm_wrapper',
+    name='bamm_suite',
     version=__version__,
-    description='wrapper script for the bamm-suite',
+    description='bamm-suite for de-novo motif discovery',
     author='Christian Roth',
     license='GPLv3',
     entry_points={
@@ -12,6 +12,6 @@ setup(
             'bamm = bamm_wrapper.wrapper:main'
         ]
     },
-    packages=['bamm_wrapper'],
+    packages=find_packages(),
     test_suite='nose.collector',
 )
