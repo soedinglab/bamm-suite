@@ -10,7 +10,9 @@ Welcome to bamm-wrapper's documentation!
   :maxdepth: 2
   :caption: Contents:
 
-  commandline_tool.rst
+  webserver
+  commandline_tool
+  bammformat
 
 
 

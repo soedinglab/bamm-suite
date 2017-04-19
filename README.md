@@ -1,27 +1,46 @@
-About bamm-wrapper
-==================
+About BaMM-suite
+================
 
-bamm-wrapper is a user friendly wrapper around tools from the baMM-suite.
+BaMM-suite is the motif finding suite developed by the Soedinglab
 
 Dependencies
 ============
 
-- sphinx-argparse (docs)
+Running the commandline tools
+-----------------------------
+
 - backports.shutil_which (python2)
+
+
+Building the documentation
+-----------------
+- sphinx
+- sphinx-argparse
+- sphinx_rtd_theme
+- sphinxcontrib-autoprogram
 
 Installing
 ==========
 
-bamm-wrapper is a python package and can be installed with pip.
+BaMM-suite is a python package and can be installed with pip.
 
     git clone https://github.com/soedinglab/bamm-wrapper.git
     cd bamm-wrapper
     pip install .
 
-Usage
-=====
 
-bamm-wrapper installs the command line script `bamm`. Run `bamm --help` for a list of available submodules.
+Building the documentation
+==========================
+
+An html version of the documentation can be built by running following commands from the root of the repository.
+
+    cd docs
+    make html
+
+Usage of the commandline tools
+==============================
+
+BaMM-suite installs the command line script `bamm`. Run `bamm --help` for a list of available submodules.
 
 License
 =======
