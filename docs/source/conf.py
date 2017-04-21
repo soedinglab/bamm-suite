@@ -55,9 +55,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'bamm-wrapper'
-copyright = '2017, Christian Roth'
-author = 'Christian Roth'
+project = 'BaMM-suite'
+copyright = '2017, Soedinglab'
+author = 'Soedinglab'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
