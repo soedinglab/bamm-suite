@@ -9,12 +9,15 @@ def create_parser():
     parser.add_argument('input_models')
     parser.add_argument('model_db')
     parser.add_argument('--n_neg_perm', type=int, default=10)
+    parser.add_argument('--highscore_fraction', type=float, default=0.1)
     return parser
 
 
 def main():
     parser = create_parser()
     args = parser.parse_args()
+
+    highscore_fraction = args.highscore_fraction
 
     def update_models(models):
         for model in models:
@@ -49,13 +52,9 @@ def main():
         for _ in range(args.n_neg_perm):
             # calculate a locality preserving permutation
             assert model_len > 1
-            found_shuffle = False
-            while not found_shuffle:
-                Z = np.random.normal(0, 1, model_len)
-                shuffle_ind = np.argsort(2 * Z + np.arange(model_len))
-                # check if it is actually shuffled
-                if not (shuffle_ind == np.arange(model_len)).all():
-                    found_shuffle = True
+            Z = np.random.normal(0, 1, model_len)
+            shuffle_ind = np.argsort(2 * Z - np.arange(model_len))
+
             shuffle_pwm = pwm[shuffle_ind]
             H_shuffle_bg = calculate_H_model_bg(shuffle_pwm, bg_freq)
             H_shuffle = calculate_H_model(shuffle_pwm)
@@ -68,8 +67,18 @@ def main():
                 )
                 shuffled_dists.append(shuf_sim)
 
+        # we are fitting only the tail of the null scores with an exponential
+        # distribution
         sorted_null = np.sort(shuffled_dists)
-        #np.savetxt('/tmp/null.stat', sorted_null)
+        N_neg = len(sorted_null)
+        high_scores = sorted_null[- N_neg * highscore_fraction:]
+        high_score = high_scores[0]
+        exp_lambda = 1 / np.mean(high_scores - high_score)
+
+        # TODO remove debug code
+        #with open('/tmp/data.pkl', 'wb') as data:
+        #    import pickle
+        #    pickle.dump([sorted_null, high_score, exp_lambda], data)
 
         # run pwm against the database
         for db_model in db_models:
@@ -78,10 +87,13 @@ def main():
                 H_model_bg, db_model['H_model_bg'],
                 H_model, db_model['H_model']
             )
-            # calculate e-value
-            left_pos = np.searchsorted(sorted_null, sim, side='left')
-            pvalue = 1 - left_pos / len(sorted_null)
-            evalue = pvalue * db_size
+            if sim < high_score:
+                # the score is not in the top scores of the background model
+                # this is surely not a significant hit
+                continue
+
+            pvalue = highscore_fraction * np.exp(- exp_lambda * (sim - high_score))
+            evalue = db_size * pvalue
             print(model_id, db_model['model_id'], sim, evalue, sep='\t')
 
 
