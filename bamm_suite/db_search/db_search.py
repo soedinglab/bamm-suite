@@ -1,6 +1,8 @@
 import argparse
 import json
 import numpy as np
+from itertools import chain
+
 from bamm_suite.db_search.utils import calculate_H_model_bg, calculate_H_model, model_sim
 
 
@@ -10,6 +12,7 @@ def create_parser():
     parser.add_argument('model_db')
     parser.add_argument('--n_neg_perm', type=int, default=10)
     parser.add_argument('--highscore_fraction', type=float, default=0.1)
+    parser.add_argument('--evalue_threshold', type=float, default=0.1)
     return parser
 
 
@@ -18,6 +21,7 @@ def main():
     args = parser.parse_args()
 
     highscore_fraction = args.highscore_fraction
+    evalue_thresh = args.evalue_threshold
 
     def update_models(models):
         for model in models:
@@ -37,6 +41,21 @@ def main():
     with open(args.model_db) as model_db:
         db_models = update_models(json.load(model_db))
         db_size = len(db_models)
+
+    rev_models = []
+    for model in models:
+        rev_model = dict(model)
+        rev_model['model_id'] = model['model_id'] + '_rev'
+        # reverse complement the pwm
+        rev_model['pwm'] = model['pwm'][::-1, ::-1]
+
+        # entropy calculations simply reverse
+        rev_model['H_model_bg'] = model['H_model_bg'][::-1]
+        rev_model['H_model'] = model['H_model'][::-1]
+        rev_models.append(rev_model)
+
+    # intertwine models and rev. complemented models
+    models = [model for pair in zip(models, rev_models) for model in pair]
 
     print('model_id', 'db_id', 'simscore', 'e-value', sep='\t')
     for model in models:
@@ -71,7 +90,7 @@ def main():
         # distribution
         sorted_null = np.sort(shuffled_dists)
         N_neg = len(sorted_null)
-        high_scores = sorted_null[- N_neg * highscore_fraction:]
+        high_scores = sorted_null[-int(N_neg * highscore_fraction):]
         high_score = high_scores[0]
         exp_lambda = 1 / np.mean(high_scores - high_score)
 
@@ -94,7 +113,8 @@ def main():
 
             pvalue = highscore_fraction * np.exp(- exp_lambda * (sim - high_score))
             evalue = db_size * pvalue
-            print(model_id, db_model['model_id'], sim, evalue, sep='\t')
+            if evalue < evalue_thresh:
+                print(model_id, db_model['model_id'], sim, evalue, sep='\t')
 
 
 if __name__ == '__main__':
