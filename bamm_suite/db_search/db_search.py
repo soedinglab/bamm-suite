@@ -100,6 +100,7 @@ def main():
         #    import pickle
         #    pickle.dump([sorted_null, high_score, exp_lambda], data)
 
+        hits = []
         # run pwm against the database
         for db_model in db_models:
             sim = model_sim(
@@ -115,7 +116,12 @@ def main():
             pvalue = highscore_fraction * np.exp(- exp_lambda * (sim - high_score))
             evalue = db_size * pvalue
             if evalue < evalue_thresh:
-                print(model_id, db_model['model_id'], sim, evalue, sep='\t')
+                hits.append((model_id, db_model['model_id'], sim, evalue))
+
+        # sort by e-value
+        hits.sort(key=lambda x: x[3])
+        for hit in hits:
+            print(*hit, sep='\t')
 
 
 if __name__ == '__main__':
