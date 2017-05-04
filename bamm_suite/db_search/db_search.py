@@ -1,7 +1,6 @@
 import argparse
 import json
 import numpy as np
-from itertools import chain
 
 from bamm_suite.db_search.utils import calculate_H_model_bg, calculate_H_model, model_sim
 
@@ -13,12 +12,14 @@ def create_parser():
     parser.add_argument('--n_neg_perm', type=int, default=10)
     parser.add_argument('--highscore_fraction', type=float, default=0.1)
     parser.add_argument('--evalue_threshold', type=float, default=0.1)
+    parser.add_argument('--seed', type=int, default=42)
     return parser
 
 
 def main():
     parser = create_parser()
     args = parser.parse_args()
+    np.random.seed(args.seed)
 
     highscore_fraction = args.highscore_fraction
     evalue_thresh = args.evalue_threshold
