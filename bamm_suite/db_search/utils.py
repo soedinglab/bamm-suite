@@ -5,16 +5,16 @@ loge2 = np.log(2)
 
 
 def calculate_H_model_bg(model, bg):
-    H = np.sum(xlogy(model, model) / loge2, axis=1)
-    H += np.sum(xlogy(bg, bg) / loge2)
+    H = xlogy(model, model).sum(axis=1) / loge2
+    H += xlogy(bg, bg).sum() / loge2
     H *= 0.5
     p_bar = 0.5 * (model + bg)
-    H -= np.sum(xlogy(p_bar, p_bar) / loge2, axis=1)
+    H -= xlogy(p_bar, p_bar).sum(axis=1) / loge2
     return H
 
 
 def calculate_H_model(model):
-    H = 0.5 * np.sum(xlogy(model, model) / loge2, axis=1)
+    H = 0.5 * xlogy(model, model).sum(axis=1) / loge2
     return H
 
 
@@ -49,18 +49,18 @@ def model_sim(model1, model2, H_model1_bg, H_model2_bg, H_model1, H_model2, min_
     for sl1, sl2 in create_slices(len(model1), len(model2), min_overlap):
         total_score = 0
         # so we want the contributions of the background
-        total_score += np.sum(H_model1_bg[sl1])
-        total_score += np.sum(H_model2_bg[sl2])
+        total_score += H_model1_bg[sl1].sum()
+        total_score += H_model2_bg[sl2].sum()
 
         # and the contributions of model1 vs. model2
-        total_score -= np.sum(H_model1[sl1])  # neg. entropy of model1
-        total_score -= np.sum(H_model2[sl2])  # neg. entropy of model2
+        total_score -= H_model1[sl1].sum()  # entropy of model1
+        total_score -= H_model2[sl2].sum()  # entropy of model2
 
         # cross entropy part
         p_bar = 0.5 * (model1[sl1, :] + model2[sl2, :])
         p_bar_entropy = xlogy(p_bar, p_bar) / loge2
-        total_score += np.sum(p_bar_entropy)
+        total_score += p_bar_entropy.sum()
 
         scores.append(total_score)
 
-    return np.max(scores)
+    return max(scores)
