@@ -1,9 +1,10 @@
 from abc import ABCMeta, abstractmethod
-from os.path import join, exists
+from os.path import join, exists, isdir, isfile
 import os
 import json
-import hashlib
-import ruamel.std.zipfile as zf
+# import ruamel.std.zipfile as zf
+from bamm_format.utils import compute_checksum
+from bamm_format.exceptions import *
 
 
 class BaMMModel(metaclass=ABCMeta):
@@ -16,7 +17,7 @@ class BaMMModel(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_metadata(self):
+    def get_metadata(self, key):
         pass
 
     @abstractmethod
@@ -40,16 +41,20 @@ class BaMMModel(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def __contains__(self, tool_id):
+        pass
+
+    @abstractmethod
     def add_attachment(self, attach_id, data):
         pass
 
+    # NOTE: Since we delete the whole attach_id entry do we really need data?
     @abstractmethod
-    def delete_attachment(self, attach_id, data):
+    def delete_attachment(self, attach_id):
         pass
 
     @abstractmethod
-    def get_attachment(self, attach_id):
-        # TODO: return filehandle
+    def open_attachment(self, attach_id):
         pass
 
     @abstractmethod
@@ -59,237 +64,109 @@ class BaMMModel(metaclass=ABCMeta):
     @abstractmethod
     def close(self):
         pass
-
 
 
 class BaMMModelFolder(BaMMModel):
 
     def __init__(self, path):
-        # TODO: Copy functionality with regards to laziness from zip variant.
-        self.path = path
-        self.general = None
-        # TODO Version read form init
-        self.metadata = None
-        self.path_attachments = join(self.path, "attachments")
-        self.path_data = join(self.path, "data")
-        self.attachments = {}
-        self.modified_attachments = []
-        self.data = {}
-        self.modified_data = []
-        if not exists(self.path):
+        self._path = path
+        self._general = {}
+        self._general_changed = False
+        self._metadata = {}
+        self._metadata_changed = False
+        self._path_attachments = join(self._path, "attachments")
+        self._path_data = join(self._path, "data")
+        self._path_general = join(self._path, "general.json")
+        self._path_metadata = join(self._path, "metadata.json")
+        self._attachments = set()
+        self._open_attachments = set()  # NOTE: I think its better here to use a list instead of a set.
+        self._deleted_files_data = set()
+        self._data = {}
+        self._modified_data = set()
+        if not exists(self._path):
             self.create_model()
-        elif not exists(join(self.path, "general.json")):
-            raise Exception("Path %s is not a real BaMMModelFolder" % self.path)
-        else:
-            with open(join(self.path, "general.json")) as f:
-                self.general = json.loads(json.load(f))
-        if not self.is_valid_model():
-            raise Exception("%s not a real BaMMModel!" % self.path)
-        with open(join(self.path, "metadata.json")) as f:
-            self.metadata = json.loads(json.load(f))
+        elif isfile(self._path):
+            raise BaMMModelInvalidError("Path %s is not a real BaMMModelFolder" % self._path)
+        elif not self.is_valid_model():
+            raise BaMMModelInvalidError("Path %s is not a real BaMMModelFolder" % self._path)
+        self.load_data()
 
-    def get_version(self):
-        # TODO: Where do we store version? Assume in general.
-        return self.general["version"]
-
-    def get_metadata(self):
-        return self.metadata
-
-    def set_metadata(self, key, value):
-        self.metadata[key] = value
-
-    def del_metadata(self, key):
-        #Do I really need this exception???
-        if key not in self.metadata:
-            raise Exception("Metadata %s not found." % key)
-        del self.metadata[key]
-
-    def __getitem__(self, item):
-        # Load
-        if item not in os.listdir(self.path_data):
-            raise Exception("Data element %s not in BaMMModel." % item)
-        # If its there load and return it.
-        return json.loads(json.load(join(self.path_data, item)))
-
-    def __setitem__(self, key, value):
-        self.data[key] = value
-        if key not in self.modified_data:
-            self.modified_data.append(key)
-
-    def __delitem__(self, key):
-        datalist = os.listdir(self.path_data)
-        if key not in datalist and key not in self.data:
-            raise Exception("Item %s not in BaMMModel.." % key)
-        if key in datalist:
-            os.remove(join(self.path_data, key))
-        del self.data[key]
-
-    def add_attachment(self, attach_id, data):
-        if attach_id in self.attachments:  # If we do it lazily also check for files.
-            raise Exception("Attachment %s already in model." % attach_id)
-        self.attachments[attach_id] = data
-        self.modified_attachments.append(attach_id)
-
-    def delete_attachment(self, attach_id, data):
-        os_attachments_list = os.listdir(self.path_attachments)
-        # If we didn't write it, just delete it from dictionary
-        if attach_id in self.modified_attachments:
-            del self.attachments[attach_id]
-            self.modified_attachments.remove(attach_id)
-        elif attach_id in os_attachments_list:
-            os.remove(join(self.path_attachments, attach_id))
-        else:
-            raise Exception("Attachment %s not in Model." % attach_id)
-
-    def get_attachment(self, attach_id):
-        # Ok, do we really work with attachments??
-        pass
-
-    def __iter__(self):
-        for data_id in os.listdir(self.path_data):
-            yield json.loads(json.load(join(self.path_data, data_id)))
+    def load_data(self):
+        self._general = BaMMModelFolder.readjsonfile(self._path_general)
+        self._metadata = BaMMModelFolder.readjsonfile(self._path_metadata)
+        for _, _, files in os.walk(self._path_data):
+            for f in files:
+                # TODO: Make sure that a missing suffix, e.g. ".json" is not a problem here. For now files are saved without suffix.
+                self._data[f] = BaMMModelFolder.readjsonfile(join(self._path_data, f))
+        # Load attachments
+        for _, _, files in os.walk(self._path_attachments):
+            self._attachments = set(files)
 
     def create_model(self):
-        """
-        Create directories and files for BaMMModel.
-        :return: 
-        """
-        # TODO: Is there any standard information that we want to include? E.g. version.
-        os.mkdir(self.path)
-        os.mkdir(join(self.path, "data"))
-        os.mkdir(join(self.path, "attachments"))
-        open("general.json", "w").close()
-        open("metadata.json", "w").close()
-        self.general = {}
-        self.metadata = {}
-
-    def is_valid_model(self):
-        """
-        Check if checksums etc. fit the data.
-        For this: Load the data, then do str(data).encode("utf-8") get the sha256.
-        :return: 
-        """
-        # TODO Maybe do it on bytestreams instead...
-        for data_id in os.listdir(self.path_data):
-            tmp = json.loads(json.load(join(self.path_data, data_id)))
-            hs = hashlib.sha3_256(str(tmp).encode("utf-8"))
-            if hs != self.general["cksum_"+data_id]:
-                return False
-        return True
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Write modified data and attachments to file, then update checksums and write metadata and general to file. 
-        :param exc_type: 
-        :param exc_val: 
-        :param exc_tb: 
-        :return: 
-        """
-        self.commit()
-
-    def commit(self):
-        """
-        commit applies all changes that have been made to the BaMMModel.
-        :return: 
-        """
-        for attach_id in self.modified_attachments:
-            with open(join(self.path_attachments, attach_id), "wb") as f:
-                # maybe open in bytemode if non human readable stuff comes.
-                f.write(self.attachments[attach_id])
-            # now compute checksum while you are at it.
-            self.general["cksum_"+attach_id] = self.compute_checksum(join(self.path_attachments, attach_id))
-        self.modified_attachments = []
-        for data_id in self.modified_data:
-            with open(join(self.path_data, data_id), "w") as f:
-                json.dump(json.dumps(self.data[data_id]), f)
-            # And now the checksum
-            self.general["cksum_" + data_id] = self.compute_ckecksum(self.data[data_id])
-        self.modified_data = []
-        with open(join(self.path, "metadata.json"), "w") as f:
-            json.dump(json.dumps(self.metadata), f)
-        with open(join(self.path, "general.json"), "w") as f:
-            json.dump(json.dumps(self.general), f)
-
-    @staticmethod
-    def compute_checksum(data):
-        return hashlib.sha256(str(data).encode("utf-8")).digest()
-
-
-class BaMMModelFolder2(BaMMModel):
-
-    def __init__(self,path):
-        self.path = path
-        self.general = None
-        self.metadata = {}
-        self.path_attachments = join(self.path, "attachments/")
-        self.path_data = join(self.path, "data/")
-        self.attachments = {}
-        self.modified_attachments = []
-        self.deleted_files = []
-        self.data = {}
-        self.modified_data = []
-        self.deleted_files_data = []
-        self.deleted_files_attachments = []
-        if not exists(self.path):
-            self.create_model()
-            for _, _, files in os.walk(self.path_data):
-                self.filelist = list(files)
-        elif not exists(join(self.path, "general.json")):
-            raise Exception("Path %s is not a real BaMMModelFolder" % self.path)
-        else:
-            self.general = self.readjsonfile(join(self.path, "general.json"))
-        if not self.is_valid_model():
-            raise Exception("%s not a real BaMMModel!" % self.path)
-        # Load metadata and general
-        self.metadata = json.loads(join(self.path, "metadata.json"))
-
-    def create_model(self):
-        os.makedirs(self.path)
-        os.makedirs(self.path_data)
-        os.makedirs(self.path_attachments)
-        open(join(self.path, "general.json"), "w").close()
-        open(join(self.path, "metadata.json"),"w").close()
+        os.makedirs(self._path)
+        os.makedirs(self._path_data)
+        os.makedirs(self._path_attachments)
+        with open(self._path_general, "w") as f:
+            json.dump(json.dumps({}), f)
+        with open(self._path_metadata, "w") as f:
+            json.dump(json.dumps({}), f)
 
     def get_version(self):
-        return self.general["version"]
+        return self._general["version"]
 
-    def set_general(self, general):
-        self.general = general
+    @property
+    def general(self):
+        return None
 
-    def get_metadata(self):
-        return self.metadata
+    def get_general_key(self, key):
+        if key in self._general:
+            return self._general[key]
+        return None
+
+    @property
+    def metada(self):
+        """
+        Metadata should only be read and changed via the get_metadata and set_metadata methods.
+        :return: 
+        """
+        return None
+
+    def get_metadata(self, key):
+        if key in self._metadata:
+            return self._metadata[key]
+        return None
 
     def set_metadata(self, key, value):
-        self.metadata[key] = value
+        self._metadata[key] = value
+        self._metadata_changed = True
 
     def del_metadata(self, key):
-        del self.metadata[key]
+        del self._metadata[key]
+        self._metadata_changed = True
 
     def __setitem__(self, tool_id, tool_data):
-        self.data[tool_id] = tool_data
-        if tool_id not in self.modified_data:
-            self.modified_data.append(tool_id)
-        if tool_id in self.deleted_files:
-            self.deleted_files_data.remove(tool_id)
+        self._data[tool_id] = tool_data
+        if tool_id not in self._modified_data:
+            self._modified_data.add(tool_id)
+        if tool_id in self._deleted_files_data:
+            self._deleted_files_data.remove(tool_id)
 
     def __getitem__(self, tool_id):
-        tool_path = join(self.path, "data", tool_id)
-        if tool_path not in self.filelist:
-            raise Exception("Tool %s not in BaMMModel" % tool_id)
-        return self.readjsonfile(tool_path)
+        if tool_id not in self._data:
+            raise ToolMissingError("Tool %s not in BaMMModel" % tool_id)
+        return self._data[tool_id]
 
     def __delitem__(self, tool_id):
-        d_path = join(self.path_data, tool_id)
-        if d_path not in self.filelist and tool_id not in self.data:
-            raise Exception("Tool_id %s does not exist." % tool_id)
-        if d_path in self.filelist:
-            self.deleted_files_data.append(tool_id)
-        if tool_id in self.data:
-            del self.data[tool_id]
-            self.modified_data.remove(tool_id)
+        if tool_id not in self._data:
+            raise ToolMissingError("Tool %s not in BaMMModel" % tool_id)
+        del self._data[tool_id]
+        if exists(join(self._path_data, tool_id)):
+            self._deleted_files_data.add(tool_id)
+        if tool_id in self._modified_data:
+            self._modified_data.remove(tool_id)
+
+    def __contains__(self, tool_id):
+        return tool_id in self._data
 
     def __enter__(self):
         return self
@@ -297,63 +174,70 @@ class BaMMModelFolder2(BaMMModel):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.commit()
 
-    # TODO: This function.
+    # NOTE: Not needed for now, since no handle is open after commit(). Keep for future.
     def close(self):
         pass
 
     def is_valid_model(self):
-        return True
+        return all([isdir(self._path), isdir(self._path_attachments), isdir(self._path_data),
+                    isfile(self._path_general), isfile(self._path_metadata)])
 
-    def add_attachment(self, attach_id, data):
+    def add_attachment(self, attach_id, data, mode="wb", overwrite=True):
         """
         Add new attachment to the attachment folder. NOTE: For now only add new files and not new directories.
         NOTE: You can only add a new attachment, if you delete the old one first.
         TODO: Change to just overwrite.
         :param attach_id: 
         :param data: 
+        :param mode:
+        :param overwrite:
         :return: 
         """
-        # TODO: Just overwrite attachments.
-        if attach_id in self.filelist and attach_id not in self.deleted_files_attachments:
-            raise Exception("Attachment %s already in model." % attach_id)
-        self.attachments[attach_id] = data
-        if attach_id not in self.modified_attachments:
-            self.modified_attachments.append(attach_id)
+        a_path = join(self._path_attachments, attach_id)
+        if not overwrite and isfile(a_path):
+            raise AttachmentAlreadyExistsError("Attachment %s already exists." % attach_id)
+        with open(a_path, mode) as f:
+            f.write(data)
+        self._attachments.add(attach_id)
 
-    def delete_attachment(self, attach_id, data):
-        a_path = join(self.path_attachments, attach_id)
-        if a_path not in self.filelist and attach_id not in self.attachments:
-            raise Exception("Attachment %s does not exists." % attach_id)
-        if attach_id in self.attachments:
-            del self.attachments[attach_id]
-        if a_path not in self.deleted_files:
-            self.deleted_files_attachments.append(attach_id)
-
-    def get_attachment(self, attach_id):
+    def delete_attachment(self, attach_id):
         """
-        Returns attachment in byte-String format.
+        Delete attachment.
         :param attach_id: 
         :return: 
         """
-        a_path = join(self.path_attachments, attach_id)
-        if (
-                a_path not in self.filelist and attach_id not in self.attachments) or attach_id in self.deleted_files_attachments:
-            raise Exception("Attachment %s not found." % attach_id)
-        if attach_id in self.attachments:
-            return self.attachments[attach_id]
-        if a_path in self.filelist:
-            with open(a_path) as f:
-                return f.read()
+        if attach_id not in self._attachments:
+            raise AttachmentMissingError("Attachment %s does not exists." % attach_id)
+        a_path = join(self._path_attachments, attach_id)
+        self._attachments.remove(attach_id)
+        os.remove(a_path)
 
+    def open_attachment(self, attach_id, mode="rw"):
+        """
+        Returns file handle to attachment. Connection should be closed by the caller.
+        However to be sure, the commit method closes all handles to attachments.
+        :param attach_id: 
+        :param mode:
+        :return: 
+        """
+        a_path = join(self._path_attachments, attach_id)
+        if os.path.isdir(a_path):
+            raise AttachmentInvalidError("Attachment %s is not a valid file name." % attach_id)
+        a_handle = open(a_path, mode)
+        self._open_attachments.add(a_handle)
+        # NOTE: Afaik only "a" and "w" create new files. The rest should already be in the attachments set.
+        if "a" in mode or "w" in mode:
+            self._attachments.add(attach_id)
+        return a_handle
+
+    # Should this iterate over values or over keys?
     def __iter__(self):
-        for model in self.get_current_data():
-            if model not in self.deleted_files_data:
-                yield self.__getitem__(model)
-            else:
-                continue
-
-    def get_current_data(self):
-        return [x for x in self.filelist if x.split("/")[-1] not in self.deleted_files_data]
+        """
+        Iterates over values in data.
+        :return: 
+        """
+        for model in self._data:
+            yield self._data[model]
 
     def commit(self):
         """
@@ -369,36 +253,35 @@ class BaMMModelFolder2(BaMMModel):
         which should be computed after a file is written.) However I specify the order here in case I made a mistake. 
         :return: 
         """
-        for attach_id in self.modified_attachments:
-            a_path = join(self.path_attachments, attach_id)
-            with open(a_path,"w") as f:
-                f.write(self.attachments[attach_id])
-                self.general["cksum_" + attach_id] = self.compute_checksum(join(self.path_attachments, attach_id))
-        self.modified_attachments = []
-        for data_id in self.modified_data:
-            d_path = join(self.path_data, data_id)
-            with open(d_path, "wb") as f:
-                json.dump(json.dumps(self.data[data_id]), f)
-                self.general["cksum_" + data_id] = self.compute_ckecksum(self.data[data_id])
-        self.modified_data = []
-        with open(join(self.path, "metadata.json"), "w") as f:
-            json.dump(json.dumps(self.metadata), f)
-        with open(join(self.path, "general.json"), "w") as f:
-            json.dump(json.dumps(self.general), f)
-        for rm_file in self.deleted_files_data:
-            d_path = join(self.path_data, rm_file)
+        if len(self._modified_data) > 0 or len(self._deleted_files_data) > 0 or self._metadata_changed:
+            self._general_changed = True
+        for handle in self._open_attachments:
+            handle.close()
+        for data_id in self._modified_data:
+            d_path = join(self._path_data, data_id)
+            with open(d_path, "w") as f:
+                json.dump(json.dumps(self._data[data_id]), f)
+                self._general["cksum_" + data_id] = compute_checksum(self._data[data_id])
+        if self._metadata_changed:
+            with open(join(self._path_metadata), "w") as f:
+                json.dump(json.dumps(self._metadata), f)
+        with open(join(self._path, "general.json"), "w") as f:
+            json.dump(json.dumps(self._general), f)
+        for rm_file in self._deleted_files_data:
+            d_path = join(self._path_data, rm_file)
             os.remove(d_path)
-        for rm_file in self.deleted_files_attachments:
-            a_path = join(self.path_attachments, rm_file)
-            os.remove(a_path)
-        # Reopen connection
-        self.__init__(self.path)
+        self.__init__(self._path)
 
-    def readjsonfile(self, fpath):
-        return json.loads(json.load(fpath))
+    @staticmethod
+    def readjsonfile(fpath):
+        with open(fpath, "rb") as f:
+            return json.loads(json.load(f))
 
-    def compute_checksum(self, data):
-        return 0
+    @staticmethod
+    def writejsonfile(data, fpath):
+        with open(fpath, "wb") as f:
+            json.dump(json.dumps(data), f)
+
 
 class BaMMModelZip(BaMMModel):
 
@@ -406,7 +289,7 @@ class BaMMModelZip(BaMMModel):
         self.zip_path = zip_path
         self.subpath = sub_path
         self.permission = permission
-        self.zf_handle = zf.ZipFile(self.zip_path, permission)
+        # self.zf_handle = zf.ZipFile(self.zip_path, permission)
         # make sure that directory is marked with an ending "/". Won't work with zip else.
         if not self.subpath.endsWith("/"):
             self.subpath += "/"
@@ -592,10 +475,10 @@ class BaMMModelZip(BaMMModel):
         self.zf_handle.close()
         for rm_file in self.deleted_files_data:
             d_path = join(self.path_data, rm_file)
-            zf.delete_from_zip_file(self.zip_path, d_path)
+            # zf.delete_from_zip_file(self.zip_path, d_path)
         for rm_file in self.deleted_files_attachments:
             a_path = join(self.path_attachments, rm_file)
-            zf.delete_from_zip_file(self.zip_path, a_path)
+            # zf.delete_from_zip_file(self.zip_path, a_path)
         # Reopen connection
         self.__init__(self.zip_path, self.subpath, self.permission)
 
@@ -619,7 +502,35 @@ class BaMMModelZip(BaMMModel):
         pass
 
 if __name__ == "__main__":
-    pass
+    import shutil
+    bmmp = "temp/d1"
+    if exists(bmmp):
+        if isdir(bmmp):
+            shutil.rmtree(bmmp)
+        else:
+            os.remove(bmmp)
+    if not exists("temp"):
+        os.mkdir("temp")
+    with open(bmmp, "w") as f:
+        f.write("sdfsdfsdfsfs")
+    try:
+        bm = BaMMModelFolder("temp/db/m1")
+    except BaMMModelInvalidError:
+        print("BaMMModelFolder could not be initialized correctly.")
+    os.remove(bmmp)
+    bm = BaMMModelFolder("temp/db/m1")
+    print("Model was created correctly.")
+    if exists(bm._path_data) and isdir(bm._path_data):
+        print("Data folder setup.")
+    if exists(bm._path_attachments) and isdir(bm._path_attachments):
+        print("Attachment folder setup.")
+    if exists(bm._path_general) and isfile(bm._path_general) and exists(bm._path_metadata) and isfile(bm._path_metadata):
+        print("Setup ok")
+    # More tests were done in the code environment.
+    # import code
+    # code.interact(local=locals())
+
+    print("BaMMModelFolder initialized correctly.")
     # Do testing here.
     # 1. Create an empty model. Then fill it with data. Get that data. The change the data and check if the changes worked. Then close BaMMModel and see if it is the same when its opened again.
     # Then do the same for testing.
