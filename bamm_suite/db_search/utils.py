@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.special import xlogy
+import operator
 
 loge2 = np.log(2)
 
@@ -41,11 +42,16 @@ def create_slices(m, n, min_overlap):
 
 def model_sim(model1, model2, H_model1_bg, H_model2_bg, H_model1, H_model2, min_overlap=2):
 
+    models_switched = False
+
     # my design model2 cannot be longer than model1
     if len(model1) < len(model2):
         model1, model2 = model2, model1
+        models_switched = True
 
     scores = []
+    slices = []
+
     for sl1, sl2 in create_slices(len(model1), len(model2), min_overlap):
         total_score = 0
         # so we want the contributions of the background
@@ -62,5 +68,17 @@ def model_sim(model1, model2, H_model1_bg, H_model2_bg, H_model1, H_model2, min_
         total_score += p_bar_entropy.sum()
 
         scores.append(total_score)
+        slices.append((sl1, sl2))
 
-    return max(scores)
+    # very neat: https://stackoverflow.com/a/6193521/2272172
+    max_index, max_score = max(enumerate(scores), key=operator.itemgetter(1))
+    max_slice1, max_slice2 = slices[max_index]
+
+    # gotta love python for that: https://stackoverflow.com/a/13335254/2272172
+    start1, end1, _ = max_slice1.indices(len(model1))
+    start2, end2, _ = max_slice2.indices(len(model2))
+
+    if models_switched:
+        return max_score, (start2, end2), (start1, end1)
+    else:
+        return max_score, (start1, end1), (start2, end2)

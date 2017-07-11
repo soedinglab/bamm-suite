@@ -1,4 +1,4 @@
-from bamm_wrapper import __version__
+from bamm_suite import __version__
 from setuptools import setup, find_packages
 
 setup(
@@ -9,7 +9,11 @@ setup(
     license='GPLv3',
     entry_points={
         'console_scripts': [
-            'bamm = bamm_wrapper.wrapper:main'
+            'bamm = bamm_suite.bamm_wrapper.wrapper:main',
+
+            # standalone scripts
+            'db_search = bamm_suite.db_search.db_search:main',
+            'meme2models = bamm_suite.db_search.meme2models:main',
         ]
     },
     packages=find_packages(),
