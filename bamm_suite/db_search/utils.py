@@ -47,27 +47,32 @@ def model_sim(model1, model2, H_model1_bg, H_model2_bg, H_model1, H_model2, min_
     # my design model2 cannot be longer than model1
     if len(model1) < len(model2):
         model1, model2 = model2, model1
+        H_model1_bg, H_model2_bg = H_model2_bg, H_model1_bg
+        H_model1, H_model2 = H_model2, H_model1
         models_switched = True
 
     scores = []
+    contributions = []
     slices = []
 
     for sl1, sl2 in create_slices(len(model1), len(model2), min_overlap):
-        total_score = 0
+        background_score = 0
         # so we want the contributions of the background
-        total_score += H_model1_bg[sl1].sum()
-        total_score += H_model2_bg[sl2].sum()
+        background_score += H_model1_bg[sl1].sum()
+        background_score += H_model2_bg[sl2].sum()
 
+        cross_score = 0
         # and the contributions of model1 vs. model2
-        total_score -= H_model1[sl1].sum()  # entropy of model1
-        total_score -= H_model2[sl2].sum()  # entropy of model2
+        cross_score += H_model1[sl1].sum()  # entropy of model1
+        cross_score += H_model2[sl2].sum()  # entropy of model2
 
         # cross entropy part
         p_bar = 0.5 * (model1[sl1, :] + model2[sl2, :])
         p_bar_entropy = xlogy(p_bar, p_bar) / loge2
-        total_score += p_bar_entropy.sum()
+        cross_score -= p_bar_entropy.sum()
 
-        scores.append(total_score)
+        scores.append(background_score - cross_score)
+        contributions.append((background_score, cross_score))
         slices.append((sl1, sl2))
 
     # very neat: https://stackoverflow.com/a/6193521/2272172
@@ -78,7 +83,9 @@ def model_sim(model1, model2, H_model1_bg, H_model2_bg, H_model1, H_model2, min_
     start1, end1, _ = max_slice1.indices(len(model1))
     start2, end2, _ = max_slice2.indices(len(model2))
 
+    contrib = contributions[max_index]
+
     if models_switched:
-        return max_score, (start2, end2), (start1, end1)
+        return max_score, (start2 + 1, end2), (start1 + 1, end1), contrib
     else:
-        return max_score, (start1, end1), (start2, end2)
+        return max_score, (start1 + 1, end1), (start2 + 1, end2), contrib

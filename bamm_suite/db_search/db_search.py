@@ -86,7 +86,8 @@ def main():
 
     with open(args.output_file, 'w') as out:
         print('model_id', 'db_id', 'simscore', 'e-value',
-              'start_query', 'end_query', 'start_hit', 'end_hit', sep='\t', file=out)
+              'start_query', 'end_query', 'start_hit', 'end_hit', 'bg_score', 'cross_score',
+              sep='\t', file=out)
         with Pool(args.n_processes, initializer=init_workers) as pool:
             jobs = []
             for model in models:
@@ -143,7 +144,7 @@ def motif_search(model):
     hits = []
     # run pwm against the database
     for db_model in db_models_g:
-        sim, (start1, end1), (start2, end2) = model_sim(
+        sim, (start1, end1), (start2, end2), (bg_score, cross_score) = model_sim(
             pwm, db_model['pwm'],
             H_model_bg, db_model['H_model_bg'],
             H_model, db_model['H_model']
@@ -157,7 +158,7 @@ def motif_search(model):
         evalue = db_size_g * pvalue
         if evalue < evalue_thresh_g:
             hits.append((model_id, db_model['model_id'], sim, evalue,
-                         start1, end1, start2, end2))
+                         start1, end1, start2, end2, bg_score, cross_score))
     return hits
 
 if __name__ == '__main__':
