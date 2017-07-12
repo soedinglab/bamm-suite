@@ -16,6 +16,7 @@ def create_parser():
     parser.add_argument('--highscore_fraction', type=float, default=0.1)
     parser.add_argument('--evalue_threshold', type=float, default=0.1)
     parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--min_overlap', type=int, default=4)
     parser.add_argument('--n_processes', type=int)
     parser.add_argument('output_file')
     return parser
@@ -36,8 +37,15 @@ def main():
     logger.setLevel(logging.INFO)
 
     def update_models(models):
+        upd_models = []
         for model in models:
             model['pwm'] = np.array(model['pwm'], dtype=float)
+            model_length, _ = model['pwm'].shape
+            if model_length < args.min_overlap:
+                logger.warn('model %s with length %s too small for the chosen min_overlap (%s).'
+                            ' Please consider lowering the min_overlap threshold.',
+                            model['model_id'], model_length, args.min_overlap)
+                continue
             model['bg_freq'] = np.array(model['bg_freq'], dtype=float)
             if 'H_model_bg' not in model or 'H_model' not in model:
                 model['H_model_bg'] = calculate_H_model_bg(model['pwm'], model['bg_freq'])
@@ -45,7 +53,8 @@ def main():
             else:
                 model['H_model_bg'] = np.array(model['H_model_bg'], dtype=float)
                 model['H_model'] = np.array(model['H_model'], dtype=float)
-        return models
+            upd_models.append(model)
+        return upd_models
 
     with open(args.input_models) as in_models:
         models = update_models(json.load(in_models))
@@ -81,6 +90,8 @@ def main():
         db_size_g = db_size
         global n_neg_perm_g
         n_neg_perm_g = args.n_neg_perm
+        global min_overlap_g
+        min_overlap_g = args.min_overlap
 
     logger.info('Queuing %s search jobs', len(models))
 
@@ -127,11 +138,10 @@ def motif_search(model):
             shuf_sim, *_ = model_sim(
                 shuffle_pwm, db_model['pwm'],
                 H_shuffle_bg, db_model['H_model_bg'],
-                H_shuffle, db_model['H_model']
+                H_shuffle, db_model['H_model'],
+                min_overlap=min_overlap_g
             )
             shuffled_dists.append(shuf_sim)
-            #if shuf_sim > 6:
-            #    print(db_model['model_id'], shuf_sim)
 
     # we are fitting only the tail of the null scores with an exponential
     # distribution
@@ -147,7 +157,8 @@ def motif_search(model):
         sim, (start1, end1), (start2, end2), (bg_score, cross_score) = model_sim(
             pwm, db_model['pwm'],
             H_model_bg, db_model['H_model_bg'],
-            H_model, db_model['H_model']
+            H_model, db_model['H_model'],
+            min_overlap=min_overlap_g,
         )
         if sim < high_score:
             # the score is not in the top scores of the background model
