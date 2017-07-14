@@ -169,7 +169,8 @@ def motif_search(model):
         evalue = db_size_g * pvalue
         if evalue < evalue_thresh_g:
             hits.append((model_id, db_model['model_id'], sim, evalue,
-                         start1, end1, start2, end2, bg_score, cross_score))
+                         start1, end1, start2, end2,
+                         max(bg_score, 0), max(cross_score, 0)))
     return hits
 
 if __name__ == '__main__':
