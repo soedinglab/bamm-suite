@@ -19,15 +19,16 @@ This repository is the entry point to the BaMM universe. Here you can find docum
 
 ## Cloning the repository
 ```bash
-   git clone https://github.com/soedinglab/bamm-wrapper.git
+   git clone https://github.com/soedinglab/bamm-suite.git
 ```
 
 ## Python package
 BaMM-suite is a python package and can be installed with pip.
 ```bash
-    cd bamm-wrapper
-    pip install .
+    cd bamm-suite
+    pip install bamm-suite-py
 ```
+
 ## Helper scripts
 To install all helper scripts into `/user/bin`, you would do:
 ```bash
