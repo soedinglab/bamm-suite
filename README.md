@@ -32,7 +32,7 @@ BaMM-suite is a python package and can be installed with pip.
 To install all helper scripts into `/user/bin`, you would do:
 ```bash
    mkdir build_cmake && cd build_cmake
-   cmake -DCMAKE_INSTALL_PREFIX:PATH=/user
+   cmake -DCMAKE_INSTALL_PREFIX:PATH=/user ..
    make install
 ```
 
