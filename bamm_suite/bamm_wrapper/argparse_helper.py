@@ -1,8 +1,6 @@
 import argparse
 import os
 
-from stammp import __version__
-
 
 def dir_rwx(path):
     if not os.path.isdir(path):

@@ -1,6 +1,8 @@
 import sys
 import subprocess
 import signal
+import datetime
+from collections import OrderedDict
 
 try:
     from shutil import which
@@ -41,3 +43,15 @@ def execute_command(cmd, debug=False):
               file=sys.stderr)
         print('|ERROR| You may want to report the error to us.', file=sys.stderr)
         raise ex
+
+
+def create_tool_metadata(tool_name, tool_version, args):
+
+    args_dict = {k: v for k, v in args.__dict__ if not k.startswith('_')}
+    metadict = {
+        'tool': tool_name,
+        'version': tool_version,
+        'time': datetime.datetime.utcnow().isoformat(),
+        'configuration': OrderedDict(sorted(args_dict.items())),
+    }
+    return metadict

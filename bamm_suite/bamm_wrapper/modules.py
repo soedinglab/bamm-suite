@@ -1,6 +1,7 @@
 import argparse
 import multiprocessing
 import sys
+from abc import ABCMeta, abstractmethod
 
 from .utils import assert_binary_presence, execute_command
 from . import argparse_helper as aph
@@ -10,7 +11,7 @@ N_CORES = multiprocessing.cpu_count()
 PY2 = sys.version_info[0] == 2
 
 
-class BaMMModule(object):
+class CmdModule(metaclass=ABCMeta):
 
     subcommand = None
     aliases = []
@@ -32,30 +33,17 @@ class BaMMModule(object):
                 aliases=self.aliases
             )
 
-        subcommand_parser.set_defaults(subcommand_func=self)
+        subcommand_parser.set_defaults(_subcommand_func=self)
         subcommand_parser.add_argument('--debug', action='store_true',
                                        help='print additional information for debugging')
         self.subcommand_parser = subcommand_parser
 
+    @abstractmethod
     def __call__(self, args):
         pass
 
 
-class EvalModule(BaMMModule):
-    subcommand = 'eval'
-
-    def __init__(self, parser):
-        help_msg = 'evaluate model performance'
-        description = 'evaluate a crossvalidated model performance'
-        super(EvalModule, self).__init__(parser, help=help_msg, description=description)
-        scp = self.subcommand_parser
-        scp.add_argument('some_file')
-
-    def __call__(self, args):
-        print('run evaluation module')
-
-
-class PEnGModule(BaMMModule):
+class PEnGModule(CmdModule):
     subcommand = 'peng'
 
     def __init__(self, parser):
@@ -100,6 +88,7 @@ class PEnGModule(BaMMModule):
 
     def __call__(self, args):
         assert_binary_presence('peng_motif')
+        print(args.__dict__)
 
         cmd = [
             'peng_motif',
@@ -127,3 +116,100 @@ class PEnGModule(BaMMModule):
             cmd.append('-background-sequences %r' % args.bg_fasta)
 
         execute_command(cmd, debug=args.debug)
+
+
+class BaMMModule(CmdModule):
+    subcommand = 'bamm'
+
+    def __init__(self, parser):
+        help_msg = 'refine a model'
+        description = 'refine a model by optimizing a bayesian markov model'
+        super().__init__(parser, help=help_msg, description=description)
+        scp = self.subcommand_parser
+        scp.add_argument('some_file')
+
+    def __call__(self, args):
+        pass
+
+
+class PostprocessModule(CmdModule):
+    subcommand = 'postprocess'
+
+    def __init__(self, parser):
+        help_msg = 'run fdr_eval, logo, precompute'
+        description = 'evaluate a crossvalidated model performance'
+        super().__init__(parser, help=help_msg, description=description)
+        scp = self.subcommand_parser
+        scp.add_argument('some_file')
+
+    def __call__(self, args):
+        pass
+
+class EvalModule(CmdModule):
+    subcommand = 'fdr_eval'
+
+    def __init__(self, parser):
+        help_msg = 'evaluate model performance'
+        description = 'evaluate a crossvalidated model performance'
+        super().__init__(parser, help=help_msg, description=description)
+        scp = self.subcommand_parser
+        scp.add_argument('some_file')
+
+    def __call__(self, args):
+        pass
+
+
+class LogoModule(CmdModule):
+    subcommand = 'logo'
+
+    def __init__(self, parser):
+        help_msg = 'plot sequence logos'
+        description = 'create sequence logos'
+        super().__init__(parser, help=help_msg, description=description)
+        scp = self.subcommand_parser
+        scp.add_argument('some_file')
+
+    def __call__(self, args):
+        pass
+
+
+class PrecomputeModule(CmdModule):
+    subcommand = 'precompute'
+
+    def __init__(self, parser):
+        help_msg = 'precompute to speed up db_search'
+        description = 'precompute logarithms to speed up db_search'
+        super().__init__(parser, help=help_msg, description=description)
+        scp = self.subcommand_parser
+        scp.add_argument('some_file')
+
+    def __call__(self, args):
+        pass
+
+
+class DBSearchModule(CmdModule):
+    subcommand = 'db_search'
+
+    def __init__(self, parser):
+        help_msg = 'search against a model database'
+        description = 'database wide pairwise model comparison'
+        super().__init__(parser, help=help_msg, description=description)
+        scp = self.subcommand_parser
+        scp.add_argument('some_file')
+
+    def __call__(self, args):
+        pass
+
+
+class SearchModule(CmdModule):
+    subcommand = 'search'
+
+    def __init__(self, parser):
+        help_msg = 'search models against sequences'
+        description = 'score new sequences with a set of models'
+        super().__init__(parser, help=help_msg, description=description)
+        scp = self.subcommand_parser
+        scp.add_argument('some_file')
+
+    def __call__(self, args):
+        pass

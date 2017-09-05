@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from .modules import BaMMModule
+from . import modules
 from . import __version__
 
 
@@ -11,7 +11,18 @@ def create_parser():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     subparser = parser.add_subparsers(title='subcommands')
-    for mod_cls in BaMMModule.__subclasses__():
+    module_classes = [
+        modules.PEnGModule,
+        modules.BaMMModule,
+        modules.SearchModule,
+        modules.DBSearchModule,
+        modules.EvalModule,
+        modules.LogoModule,
+        modules.PrecomputeModule,
+        modules.PostprocessModule,
+    ]
+
+    for mod_cls in module_classes:
         mod_cls(subparser)
     parser.add_argument('--version', action='version',
                         version=__version__)
