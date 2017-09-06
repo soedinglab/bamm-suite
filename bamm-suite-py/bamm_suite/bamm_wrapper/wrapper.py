@@ -2,7 +2,7 @@ import argparse
 import sys
 
 from . import modules
-from . import __version__
+from bamm_suite import __version__
 
 
 def create_parser():

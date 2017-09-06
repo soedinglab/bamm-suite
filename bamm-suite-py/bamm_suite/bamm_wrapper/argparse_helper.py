@@ -1,5 +1,6 @@
 import argparse
 import os
+from bamm_suite import __version__
 
 
 def dir_rwx(path):
