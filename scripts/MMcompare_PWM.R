@@ -334,9 +334,9 @@ MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, 
   info_real <- info_all[info_all[,"FP"]== 0,]
   
   if(class(info_real) == "matrix"){
-    best_matches = info_real[which(info_real[,"p-value"]<= p_val_limit),]  
+    best_matches = info_real[which(as.numeric(info_real[,"p-value"])<= p_val_limit),]  
   }else{
-    best_matches = info_real[which(info_real["p-value"]<= p_val_limit)]  
+    best_matches = info_real[which(as.numeric(info_real["p-value"])<= p_val_limit)]  
   }
   
   
@@ -397,7 +397,7 @@ MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, 
 db_file_pattern_ending=".ihbcp"
 
 #query          <- "/home/kiesel/Desktop/TomTomTool/Results/wgEncodeHaibTfbsA549GrPcr2xDex100nmAlnRep0_summits125/wgEncodeHaibTfbsA549GrPcr2xDex100nmAlnRep0_summits125_motif_1.ihbcp"
-query          <- "/home/kiesel/Downloads/wgEncodeUwTfbsGm12864CtcfStdAlnRep0_summits104_restr5000.meme"
+query          <- "wgEncodeUwTfbsGm12864CtcfStdAlnRep0_summits104_restr5000.meme"
 #query          <- "/home/kiesel/Downloads/wgEncodeUwTfbsGm12864CtcfStdAlnRep0_summits104_restr5000_single.meme"
 #db_folder      <- "/home/kiesel/Desktop/TomTomTool/Results/"
 db_folder      <- "NA"
