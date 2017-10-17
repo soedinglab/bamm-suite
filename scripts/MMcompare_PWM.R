@@ -373,10 +373,12 @@ MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, 
         message('no matches!\n')  
       }else{
         if(!web){
-        message("Query Target p-value e-value score overlap-length")  
+          message("Query Target p-value e-value score overlap-length")  
         }
         message(query_name,' ', best_matches["Target.ID"] , ' ' , best_matches["p-value"] , ' ' , best_matches["e-value"] , ' ' , best_matches["score"] , ' ' , best_matches["W"])
-        message("\n")
+        if(!web){
+          message("\n")          
+        }
       }
     }
     else{
@@ -389,7 +391,9 @@ MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, 
         for(i in c(1:dim(best_matches)[1])){
           message(query_name,' ', best_matches[i,"Target.ID"] , ' ' , best_matches[i,"p-value"] , ' ' , best_matches[i,"e-value"] , ' ' , best_matches[i,"score"] , ' ' , best_matches[i,"W"])
         }
-        message("\n")  
+        if(!web){
+          message("\n")            
+        }
       }
     }
   }
