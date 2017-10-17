@@ -455,6 +455,7 @@ p_val_limit    <- args$pValue
 min_overlap    <- args$minOverlap
 alpha          <- args$alpha
 e              <- args$epsilon
+web            <- args$web
 
     if( unlist(strsplit(query, "\\."))[-1] == "ihbcp" ){
       pwm                 = read_pwm(query, pwm_order, read_order)
