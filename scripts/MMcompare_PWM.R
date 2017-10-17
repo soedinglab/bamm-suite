@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 ##### functions #####
 options(warn = -1)
-library( rtfbs )
-library( argparse )
+suppressMessages(library( rtfbs ))
+suppressMessages(library( argparse ))
 
 ### read in meme formated files using rtfbs package
 read_meme <- function(pwm_file){
@@ -372,7 +372,9 @@ MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, 
       if(length(best_matches) == 0){
         message('no matches!\n')  
       }else{
-        message("Query Target p-value e-value score overlap-length")
+        if(!web){
+        message("Query Target p-value e-value score overlap-length")  
+        }
         message(query_name,' ', best_matches["Target.ID"] , ' ' , best_matches["p-value"] , ' ' , best_matches["e-value"] , ' ' , best_matches["score"] , ' ' , best_matches["W"])
         message("\n")
       }
@@ -381,7 +383,9 @@ MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, 
       if(dim(best_matches)[1] == 0){
         message('no matches!\n')  
       }else{
-        message("Query Target p-value e-value score overlap-length")
+        if(!web){
+          message("Query Target p-value e-value score overlap-length")  
+        }
         for(i in c(1:dim(best_matches)[1])){
           message(query_name,' ', best_matches[i,"Target.ID"] , ' ' , best_matches[i,"p-value"] , ' ' , best_matches[i,"e-value"] , ' ' , best_matches[i,"score"] , ' ' , best_matches[i,"W"])
         }
@@ -434,6 +438,7 @@ parser$add_argument("--pValue",      type="double", default=0.01, help="limit fo
 parser$add_argument("--minOverlap",  type="integer", default=4,    help="minimum overlap between query and db motif" )
 parser$add_argument("--alpha",       type="double", default=1,    help="weighting of the motif strength in the overall score" )
 parser$add_argument("--epsilon",     type="double", default=1e-5, help="small factor to avoid division by 0 " )
+parser$add_argument("--web",         type="logical", default=FALSE, help="flag when running in web mode for supressing header line" )
 
 
 args           <- parser$parse_args()
