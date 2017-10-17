@@ -126,14 +126,14 @@ def read_pwm(filename, order):
                 profile = np.zeros(4)
                 tokens = line.split()
                 if len(tokens) != 4:
-                    print("ERROR: line does not seem to be part of a valid pwm!!!", file=sys.stderr)
+                    print("ERROR: line does not seem to be part of a valid pwm, more than 4 nucleotides!!!", file=sys.stderr)
                     print("\t{}".format(line), file=sys.stderr)
                     exit(1)
                 for i, token in enumerate(tokens):
                     profile[i] = float(token)
-                EPSILON = 0.1
+                EPSILON = 0.4
                 if np.sum(profile) >= 1.0 + EPSILON or np.sum(profile) <= 1.0 - EPSILON:
-                    print("ERROR: line does not seem to be part of a valid pwm!!!", file=sys.stderr)
+                    print("ERROR: line does not seem to be part of a valid pwm, probabilities dont add up to 1!!!", file=sys.stderr)
                     print("\t{}".format(line), file=sys.stderr)
                     exit(1)
                 pwm.append(profile)
