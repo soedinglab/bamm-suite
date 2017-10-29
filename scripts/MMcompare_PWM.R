@@ -77,7 +77,7 @@ get_min_dist_p_q <- function(p, plogp, q, qlogq, min_overlap, bg, bglogbg,pad_un
   min_W = 0
   min_off_p = 0
   min_off_q = 0
-
+  
   len_p = dim(p)[1]
   len_q = dim(q)[1]
   max_ol = min(len_p,len_q)
@@ -89,14 +89,14 @@ get_min_dist_p_q <- function(p, plogp, q, qlogq, min_overlap, bg, bglogbg,pad_un
     if(pad_underhangs){
       max_len = len_q+len_p-len_ol
       
-        # extend p  = off_q_BG + p + (max_len-len_p-off_q)_BG
-        p_padded = rbind(matrix(rep(bg[1,],off_q),ncol = 4^(read_order+1), byrow=TRUE), p, matrix(rep(bg[1,],(max_len-len_p-off_q)),ncol = 4^(read_order+1), byrow=TRUE))
-        plogp_padded = rbind(matrix(rep(bglogbg[1,],off_q),ncol = 4^(read_order+1), byrow=TRUE),plogp,matrix(rep(bglogbg[1,],(max_len-len_p-off_q)),ncol = 4^(read_order+1), byrow=TRUE))
-        # extend q  = off_p_BG + q + (max_len-len_q-off_p)_BG
-        q_padded = rbind(matrix(rep(bg[1,],off_p),ncol = 4^(read_order+1), byrow=TRUE), q, matrix(rep(bg[1,],(max_len-len_q-off_p)),ncol = 4^(read_order+1), byrow=TRUE))
-        qlogq_padded = rbind(matrix(rep(bglogbg[1,],off_p),ncol = 4^(read_order+1), byrow=TRUE), qlogq, matrix(rep(bglogbg[1,],(max_len-len_q-off_p)),ncol = 4^(read_order+1), byrow=TRUE))
+      # extend p  = off_q_BG + p + (max_len-len_p-off_q)_BG
+      p_padded = rbind(matrix(rep(bg[1,],off_q),ncol = 4^(read_order+1), byrow=TRUE), p, matrix(rep(bg[1,],(max_len-len_p-off_q)),ncol = 4^(read_order+1), byrow=TRUE))
+      plogp_padded = rbind(matrix(rep(bglogbg[1,],off_q),ncol = 4^(read_order+1), byrow=TRUE),plogp,matrix(rep(bglogbg[1,],(max_len-len_p-off_q)),ncol = 4^(read_order+1), byrow=TRUE))
+      # extend q  = off_p_BG + q + (max_len-len_q-off_p)_BG
+      q_padded = rbind(matrix(rep(bg[1,],off_p),ncol = 4^(read_order+1), byrow=TRUE), q, matrix(rep(bg[1,],(max_len-len_q-off_p)),ncol = 4^(read_order+1), byrow=TRUE))
+      qlogq_padded = rbind(matrix(rep(bglogbg[1,],off_p),ncol = 4^(read_order+1), byrow=TRUE), qlogq, matrix(rep(bglogbg[1,],(max_len-len_q-off_p)),ncol = 4^(read_order+1), byrow=TRUE))
       
-        distance = calc_pwm_dist(p_padded,q_padded,0,0,max_len,plogp_padded,qlogq_padded)
+      distance = calc_pwm_dist(p_padded,q_padded,0,0,max_len,plogp_padded,qlogq_padded)
     }else{
       max_len = len_ol
       distance = calc_pwm_dist(p,q,off_p,0,len_ol, plogp,qlogq)  
@@ -123,7 +123,7 @@ get_min_dist_p_q <- function(p, plogp, q, qlogq, min_overlap, bg, bglogbg,pad_un
       q_padded = rbind(matrix(rep(bg[1,],off_p),ncol = 4^(read_order+1), byrow=TRUE), q, matrix(rep(bg[1,],(max_len-len_q-off_p)),ncol = 4^(read_order+1), byrow=TRUE))
       qlogq_padded = rbind(matrix(rep(bglogbg[1,],off_p),ncol = 4^(read_order+1), byrow=TRUE), qlogq, matrix(rep(bglogbg[1,],(max_len-len_q-off_p)),ncol = 4^(read_order+1), byrow=TRUE))
       
-        distance = calc_pwm_dist(p_padded,q_padded,0,0,max_len,plogp_padded,qlogq_padded)
+      distance = calc_pwm_dist(p_padded,q_padded,0,0,max_len,plogp_padded,qlogq_padded)
     }else{
       max_len = len_ol
       distance = calc_pwm_dist(p,q,0,off_q,len_ol,plogp, qlogq)  
@@ -137,7 +137,7 @@ get_min_dist_p_q <- function(p, plogp, q, qlogq, min_overlap, bg, bglogbg,pad_un
       maxLen = max_len
     }
   }
-
+  
   info = c(min_d, min_W, min_off_p, min_off_q, maxLen)
   names(info)<- c("dist", "OL", "off_p","off_q", "W")
   return(info)
@@ -165,7 +165,7 @@ read_db_folder <- function(db_folder, db_order, read_order){
 ### get score for motif - db comparison
 get_Scores <- function(pwm,pwm_log_pwm, bg, bg_log_bg, db_motifs, read_order, alpha, min_overlap, p_bg_dist, p_rev_bg_dist, pwm_rev, pwm_rev_log_pwm_rev, pad_underhangs){
   scores = c()
-
+  
   for( db_id in names(db_motifs)){
     pwm_db = db_motifs[[db_id]]
     # add little pseudos to pwm_db in case the counts are zero to avoid log problems
@@ -173,36 +173,36 @@ get_Scores <- function(pwm,pwm_log_pwm, bg, bg_log_bg, db_motifs, read_order, al
     
     pwm_db_log_pwm_db = pwm_db * log2(pwm_db)
     if(dim(pwm_db)[1] != dim(bg)[1]){
-        bg = matrix(rep(bg[1,],dim(pwm_db)[1]),ncol = 4^(read_order+1), byrow=TRUE)
-        bg_log_bg = bg * log2(bg)
+      bg = matrix(rep(bg[1,],dim(pwm_db)[1]),ncol = 4^(read_order+1), byrow=TRUE)
+      bg_log_bg = bg * log2(bg)
     }
     q_bg_dist     = get_dist_bg( pwm_db, bg, pwm_db_log_pwm_db, bg_log_bg)
     p_q_info      = get_min_dist_p_q( pwm, pwm_log_pwm, pwm_db, pwm_db_log_pwm_db, min_overlap, bg, bg_log_bg, pad_underhangs)
     p_rev_q_info  = get_min_dist_p_q( pwm_rev, pwm_rev_log_pwm_rev, pwm_db, pwm_db_log_pwm_db, min_overlap, bg, bg_log_bg, pad_underhangs)
-  
+    
     # calc matching score eitehr on original db motif or on reverse complement, whatever has the smaler distance to the query motif
     if(p_q_info["dist"]<p_rev_q_info["dist"]){
-        if(pad_underhangs){
-          q_bg = sum(q_bg_dist)
-          p_bg = sum(p_bg_dist)
-        }else{
-          q_bg = sum(q_bg_dist[p_q_info["off_q"]:(p_q_info["off_q"]+p_q_info["W"]-1)])
-          p_bg = sum(p_bg_dist[p_q_info["off_p"]:(p_q_info["off_p"]+p_q_info["W"]-1)])
-        }
-        s_p_q = alpha * (p_bg +q_bg)  - p_q_info["dist"]
-        line_in = c(s_p_q, p_q_info["dist"], p_q_info["OL"], p_q_info["off_p"],p_q_info["off_q"], q_bg, p_bg,p_q_info["W"], 0, db_id )
-     }else{
-        if(pad_underhangs){
-          q_bg = sum(q_bg_dist)
-          p_bg = sum(p_rev_bg_dist)
-        }else{
-          q_bg = sum(q_bg_dist[p_rev_q_info["off_q"]:(p_rev_q_info["off_q"]+p_rev_q_info["W"]-1)])
-          p_bg = sum(p_bg_dist[p_rev_q_info["off_p"]:(p_rev_q_info["off_p"]+p_rev_q_info["W"]-1)])
-        }
-        s_p_q = alpha * (p_bg + q_bg) - p_rev_q_info["dist"]
-        line_in = c(s_p_q, p_rev_q_info["dist"],p_rev_q_info["OL"], p_rev_q_info["off_p"], p_rev_q_info["off_q"],q_bg, p_bg, p_rev_q_info["W"], 1, db_id)
+      if(pad_underhangs){
+        q_bg = sum(q_bg_dist)
+        p_bg = sum(p_bg_dist)
+      }else{
+        q_bg = sum(q_bg_dist[p_q_info["off_q"]:(p_q_info["off_q"]+p_q_info["W"]-1)])
+        p_bg = sum(p_bg_dist[p_q_info["off_p"]:(p_q_info["off_p"]+p_q_info["W"]-1)])
       }
-      scores = rbind(scores, line_in)
+      s_p_q = alpha * (p_bg +q_bg)  - p_q_info["dist"]
+      line_in = c(s_p_q, p_q_info["dist"], p_q_info["OL"], p_q_info["off_p"],p_q_info["off_q"], q_bg, p_bg,p_q_info["W"], 0, db_id )
+    }else{
+      if(pad_underhangs){
+        q_bg = sum(q_bg_dist)
+        p_bg = sum(p_rev_bg_dist)
+      }else{
+        q_bg = sum(q_bg_dist[p_rev_q_info["off_q"]:(p_rev_q_info["off_q"]+p_rev_q_info["W"]-1)])
+        p_bg = sum(p_bg_dist[p_rev_q_info["off_p"]:(p_rev_q_info["off_p"]+p_rev_q_info["W"]-1)])
+      }
+      s_p_q = alpha * (p_bg + q_bg) - p_rev_q_info["dist"]
+      line_in = c(s_p_q, p_rev_q_info["dist"],p_rev_q_info["OL"], p_rev_q_info["off_p"], p_rev_q_info["off_q"],q_bg, p_bg, p_rev_q_info["W"], 1, db_id)
+    }
+    scores = rbind(scores, line_in)
   }
   if(class(scores) == "matrix"){
     colnames(scores)<- c("score", "q_p", "OL","off_M1","off_M2", "q_bg", "p_bg", "W","reverseComplement", "Target.ID")  
@@ -282,7 +282,7 @@ shuffle_pwm <- function(pwm){
 }
 
 # run MMCompare for one Query Motif
-MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, pad_underhangs, p_val_limit, min_overlap, alpha, e, outFile){
+MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, pad_underhangs, p_val_limit, min_overlap, alpha, e, outFile, motifNumber ){
   # add little pseudos to pwm in case the counts are zero to avoid log problems
   pwm[pwm == 0]<-1e-5
   
@@ -340,60 +340,27 @@ MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, 
   }
   
   
-  if(outFile != "NA"){
-    # create if file doesn't exist yet
-    if(!file.exists(outFile)){
-      write(x='', file=outFile)
+  
+  # create if file doesn't exist yet
+  #if(!file.exists(outFile)){
+  #  write(x='', file=outFile)
+  #}
+  # output results
+  if(class(best_matches) == "character"){
+    if(length(best_matches) == 0){
+      write(x='no matches!\n', file=outFile, append=TRUE)  
+    }else{
+      #write(x='Query motifNum Target p-value e-value score overlap-length',file = outFile, append = TRUE)
+      write(x=paste0(query_name,' ',motifNumber, ' ', best_matches["Target.ID"] , ' ' , best_matches["p-value"] , ' ' , best_matches["e-value"] , ' ' , best_matches["score"] , ' ' , best_matches["W"]), file=outFile,append=TRUE)
     }
-    # output results
-    if(class(best_matches) == "character"){
-      if(length(best_matches) == 0){
-        write(x='no matches!\n', file=outFile, append=TRUE)  
-      }else{
-        write(x='Query Target p-value e-value score overlap-length',file = outFile, append = TRUE)
-        write(x=paste0(query_name,' ', best_matches["Target.ID"] , ' ' , best_matches["p-value"] , ' ' , best_matches["e-value"] , ' ' , best_matches["score"] , ' ' , best_matches["W"]), file=outFile,append=TRUE)
-        write(x="\n", file=outFile,append=TRUE)
-      }
-    }
-    else{
-      if(dim(best_matches)[1] == 0){
-        write(x='no matches!\n',file=outFile, append=TRUE)  
-      }else{
-        write(x="Query Target p-value e-value score overlap-length", file=outFile, append=TRUE)
-        for(i in c(1:dim(best_matches)[1])){
-          write(x=paste0(query_name,' ', best_matches[i,"Target.ID"] , ' ' , best_matches[i,"p-value"] , ' ' , best_matches[i,"e-value"] , ' ' , best_matches[i,"score"] , ' ' , best_matches[i,"W"]), file=outFile, append = TRUE)
-        }
-        write(x="\n", file=outFile, append=TRUE)  
-      }
-    }
-  }else{
-    # output results
-    if(class(best_matches) == "character"){
-      if(length(best_matches) == 0){
-        message('no matches!\n')  
-      }else{
-        if(!web){
-          message("Query Target p-value e-value score overlap-length")  
-        }
-        message(query_name,' ', best_matches["Target.ID"] , ' ' , best_matches["p-value"] , ' ' , best_matches["e-value"] , ' ' , best_matches["score"] , ' ' , best_matches["W"])
-        if(!web){
-          message("\n")          
-        }
-      }
-    }
-    else{
-      if(dim(best_matches)[1] == 0){
-        message('no matches!\n')  
-      }else{
-        if(!web){
-          message("Query Target p-value e-value score overlap-length")  
-        }
-        for(i in c(1:dim(best_matches)[1])){
-          message(query_name,' ', best_matches[i,"Target.ID"] , ' ' , best_matches[i,"p-value"] , ' ' , best_matches[i,"e-value"] , ' ' , best_matches[i,"score"] , ' ' , best_matches[i,"W"])
-        }
-        if(!web){
-          message("\n")            
-        }
+  }
+  else{
+    if(dim(best_matches)[1] == 0){
+      write(x='no matches!\n',file=outFile, append=TRUE)  
+    }else{
+      #write(x="Query motifNum Target p-value e-value score overlap-length", file=outFile, append=TRUE)
+      for(i in c(1:dim(best_matches)[1])){
+        write(x=paste0(query_name,' ',motifNumber, ' ', best_matches[i,"Target.ID"] , ' ' , best_matches[i,"p-value"] , ' ' , best_matches[i,"e-value"] , ' ' , best_matches[i,"score"] , ' ' , best_matches[i,"W"]), file=outFile, append = TRUE)
       }
     }
   }
@@ -403,83 +370,89 @@ MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, 
 #### BaMM-compare for finding motif-motif matches
 #######################################################
 db_file_pattern_ending=".ihbcp"
-
-#query          <- "/home/kiesel/Desktop/TomTomTool/Results/wgEncodeHaibTfbsA549GrPcr2xDex100nmAlnRep0_summits125/wgEncodeHaibTfbsA549GrPcr2xDex100nmAlnRep0_summits125_motif_1.ihbcp"
-query          <- "wgEncodeUwTfbsGm12864CtcfStdAlnRep0_summits104_restr5000.meme"
-#query          <- "/home/kiesel/Downloads/wgEncodeUwTfbsGm12864CtcfStdAlnRep0_summits104_restr5000_single.meme"
-#db_folder      <- "/home/kiesel/Desktop/TomTomTool/Results/"
-db_folder      <- "NA"
-db_order       <- 4
-pwm_order      <- 4
+#dir            <- "WORK/media_db/jobs/173cc9d6-026d-46a2-8bcc-f4fe1d7eaf1d/Output/"
+#prefix         <- "ExampleData"
+#db_folder      <- "WORK/BaMM_webserver/DB/ENCODE_ChIPseq/Results/"
+#db_order       <- 4
+#pwm_order      <- 0
 read_order     <- 0
-#querybg        <- "/home/kiesel/Desktop/TomTomTool/Results/wgEncodeHaibTfbsA549GrPcr2xDex100nmAlnRep0_summits125/wgEncodeHaibTfbsA549GrPcr2xDex100nmAlnRep0_summits125.hbcp"
-querybg        <- "NA"
-outFile        <- "/home/kiesel/Desktop/Testing_MMCompare_3.txt"
-#outFile        <- "NA"
-shuffle_times  <- 50
+shuffle_times  <- 20
 pad_underhangs <- TRUE
-p_val_limit    <- 0.01
+#p_val_limit    <- 0.01
 min_overlap    <- 4
 alpha          <- 1
 e              <- 1e-5
 
 parser <- ArgumentParser(description="plot the motif distribution")
 # positional arguments
-parser$add_argument('query', help="full path to query file (either meme (.meme) or bamm (.ihbcp) format)")
+parser$add_argument('maindir',       help="directory that contains the target file(s)")
+parser$add_argument('prefix',        help="prefix of the target file")
 
 # optional arguments needed only for bamm file format (all of those can be neglected when comparing meme pwm list with itself)
 parser$add_argument("--dbDir",       type="character", default="NA", help="full path to database, if not given, query will be screed against itself" )
 parser$add_argument("--dbOrder",     type="integer",   default=0,  help="order of motifs stored in the database" )
 parser$add_argument("--qOrder",      type="integer",   default=0,  help="order of query motifs for bamm format" )
 parser$add_argument("--readOrder",   type="integer",   default=0,  help="order on which to compare query and DB (currently only 0-th order implemented!)" )
-parser$add_argument("--bg",          type="character", default="NA", help="full path to query background file for bamm format" )
-parser$add_argument("--outFile",     type="character", default="NA", help="full path to output file. If none given results are written to the terminal.")
 
 # optional arguments for parameter settings
 parser$add_argument("--sampling",    type="integer", default=20,   help="number of sampled query motifs to calulate p-value" )
 parser$add_argument("--padding",     type="logical", default=TRUE, help="boolean, if underhangs due to shifting should be padded" )
-parser$add_argument("--pValue",      type="double", default=0.01, help="limit for reporting motif-motif comparisons" )
+parser$add_argument("--pValue",      type="double",  default=0.01, help="limit for reporting motif-motif comparisons" )
 parser$add_argument("--minOverlap",  type="integer", default=4,    help="minimum overlap between query and db motif" )
-parser$add_argument("--alpha",       type="double", default=1,    help="weighting of the motif strength in the overall score" )
-parser$add_argument("--epsilon",     type="double", default=1e-5, help="small factor to avoid division by 0 " )
-parser$add_argument("--web",         type="logical", default=FALSE, help="flag when running in web mode for supressing header line" )
-
+parser$add_argument("--alpha",       type="double",  default=1,    help="weighting of the motif strength in the overall score" )
+parser$add_argument("--epsilon",     type="double",  default=1e-5, help="small factor to avoid division by 0 " )
 
 args           <- parser$parse_args()
-query          <- args$query
 db_folder      <- args$dbDir
 db_order       <- args$dbOrder
 pwm_order      <- args$qOrder
 read_order     <- args$readOrder
-querybg        <- args$bg
-outFile        <- args$outFile
 shuffle_times  <- args$sampling
 pad_underhangs <- args$padding
 p_val_limit    <- args$pValue
 min_overlap    <- args$minOverlap
 alpha          <- args$alpha
 e              <- args$epsilon
-web            <- args$web
 
-    if( unlist(strsplit(query, "\\."))[-1] == "ihbcp" ){
-      pwm                 = read_pwm(query, pwm_order, read_order)
-      bg                  = read_bg(querybg, read_order, dim(pwm[[1]])[1])
-    }
-    
-    if(unlist(strsplit(query, "\\."))[-1] == "meme"  ){
-      info = read_meme(query)
-      pwm = info[[1]]
-      bg = info[[2]]
-    }
-    
-    if(db_folder != "NA"){
-      # THIS NEEDS EXTENSION FOR WORKING WITH A DB OF PWMS! (currently only working with the .ihbcp db)
-      db_motifs = read_db_folder(db_folder, db_order, read_order)
-    }else{
-      db_motifs = pwm
-    }
+# interpret the arguments
+dir 	<- args$maindir
+prefix 	<- args$prefix
+outFile   <- paste(dir, '/', prefix, ".mmcomp", sep = "" )
 
-    for(name in names(pwm)){
-        MMcompare(pwm[[name]],name, bg, db_motifs, read_order, shuffle_times, pad_underhangs, p_val_limit, min_overlap, alpha, e, outFile)
+pwms_in <- Sys.glob(paste0(dir, "/", prefix, "*", ".meme"))
+bamms_in <- Sys.glob(paste0(dir, "/", prefix, "*", ".ihbcp"))
+infiles <- c(pwms_in,bamms_in)
+ending <- unlist(strsplit(infiles[1], "\\."))[-1]
+
+for (f in infiles) {
+  if( unlist(strsplit(f, "\\."))[-1] == "ihbcp" ){
+    # get motif number from the filename; Note: important for motif reranking
+    motifNumber <- sub(paste0(dir, "/", prefix, "_motif_"), "", f)
+    motifNumber <- sub(paste0(".",ending), "", motifNumber)
+    pwm       <- read_pwm(f, pwm_order, read_order)
+    bg_file   <- paste0(dir, "/", prefix, ".hbcp")
+    bg        <- read_bg(bg_file, read_order, dim(pwm[[1]])[1])
+  }
+  
+  if(unlist(strsplit(f, "\\."))[-1] == "meme"  ){
+    info = read_meme(f)
+    pwm = info[[1]]
+    bg = info[[2]]
+  }
+  
+  if(db_folder != "NA"){
+    # THIS NEEDS EXTENSION FOR WORKING WITH A DB OF PWMS! (currently only working with the .ihbcp db)
+    db_motifs = read_db_folder(db_folder, db_order, read_order)
+  }else{
+    db_motifs = pwm
+  }
+  counter = 0
+  for(name in names(pwm)){
+    if( ending == 'meme'){
+      counter = counter + 1
+      motifNumber = counter
     }
-    
+    MMcompare(pwm[[name]],prefix, bg, db_motifs, read_order, shuffle_times, pad_underhangs, p_val_limit, min_overlap, alpha, e, outFile, motifNumber)
+  }
+  
+}   
