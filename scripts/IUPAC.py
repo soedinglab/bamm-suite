@@ -148,13 +148,19 @@ def read_pwm(filename, order):
 #THE main ;)
 def main():
     parser = argparse.ArgumentParser(description='Translates a PWM into an IUPAC identifier and prints it')
-    parser.add_argument(metavar='PWM_FILE', dest='pwm_file', type=str,
-                        help='file with the pwm')
+    parser.add_argument(metavar='MAIN_DIR', dest='maindir', type=str,
+                        help='directory with motif files')
+    parser.add_argument(metavar='PREFIX', dest='prefix', type=str,
+                        help='prefix used to name output files')
     parser.add_argument(metavar='ORDER', dest='order', type=int,
-                        help='order of the model represented in the pwm file')
+                        help='order of the models represented in the motif files')
 
 
     args = parser.parse_args()
+
+    maindir = args.maindir
+    prefix = args.prefix
+    order = args.order 
 
     #preparation
     representative_iupac_nucleotides = init_representative_map()
@@ -162,11 +168,19 @@ def main():
     bg_model = get_bg_model()
     iupac_profiles = init_iupac_profiles(representative_iupac_nucleotides, bg_model)
 
-    #read pwm
-    pwm = read_pwm(args.pwm_file, args.order)
-        
-    result = get_iupac_string(pwm, iupac_profiles, int2char)
-    print(result)
+    outfile = ''.join([prefix, '.iupac'])
+    os.chdir(maindir)    
+    with open(outfile, 'w') as fh:
+        # get all motif file in the folder
+        for file in glob.glob("*.ihbcp"):
+            print(file)
+            #read motif file
+            end = file.split('_')[2]
+            motif_num = end.split('.')[0]
+            pwm   = read_pwm(file, order)
+            iupac = get_iupac_string(pwm, iupac_profiles, int2char)
+            line = ' '.join([prefix, motif_num, iupac, str(len(iupac)), '\n'])
+            fh.write(line)
     
 #if called as a script; calls the main method
 if __name__ == '__main__':
