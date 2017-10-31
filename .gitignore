@@ -1,4 +1,6 @@
 scripts/MMcompare.R
+scripts/MMcompare_PWM_backup.R
+scripts/.Rapp.history
 
 *.egg-info
 *.pyc
