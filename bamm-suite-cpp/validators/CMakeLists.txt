@@ -1,0 +1,3 @@
+add_executable(validate_bindingsite_file ValidateBindingSiteFile.cpp)
+add_executable(validate_fasta_file ValidateFastaFile.cpp)
+INSTALL(TARGETS validate_bindingsite_file validate_fasta_file DESTINATION bin)

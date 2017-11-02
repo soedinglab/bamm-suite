@@ -10,3 +10,4 @@ INSTALL(DIRECTORY scripts/
 )
 
 add_subdirectory(PEnG-motif)
+add_subdirectory(bamm-suite-cpp)

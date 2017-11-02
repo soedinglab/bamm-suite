@@ -2,6 +2,10 @@ scripts/MMcompare.R
 scripts/MMcompare_PWM_backup.R
 scripts/.Rapp.history
 
+cmake-build-*
+.idea/
+
+
 *.egg-info
 *.pyc
 *.swp
