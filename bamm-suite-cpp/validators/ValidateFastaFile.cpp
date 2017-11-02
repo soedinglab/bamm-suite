@@ -10,6 +10,7 @@
 #include <fstream>	// e.g. std::ifstream
 #include <sstream>	// e.g. std::ostringstream
 #include <vector>
+#include <limits>
 
 
 namespace Validator {

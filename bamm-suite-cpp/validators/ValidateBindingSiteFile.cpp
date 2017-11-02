@@ -27,7 +27,7 @@ namespace Validator {
 
 int validBindingSiteFile(std::string filename, int minSeqLength){
 
-	std::ifstream file( filename );						// read file
+	std::ifstream file(filename.c_str());						// read file
 	std::string bindingsite;							// read each binding site sequence from each line
 	int bindingSiteWidth;								// length of binding site from each line
 	int C = 0;
