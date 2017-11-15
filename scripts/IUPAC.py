@@ -175,7 +175,7 @@ def main():
         for file in glob.glob("*.ihbcp"):
             print(file)
             #read motif file
-            end = file.split('_')[2]
+            end = file.split('_')[-1]
             motif_num = end.split('.')[0]
             pwm   = read_pwm(file, order)
             iupac = get_iupac_string(pwm, iupac_profiles, int2char)
