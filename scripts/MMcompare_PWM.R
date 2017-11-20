@@ -427,9 +427,10 @@ ending <- unlist(strsplit(infiles[1], "\\."))[-1]
 for (f in infiles) {
   if( unlist(strsplit(f, "\\."))[-1] == "ihbcp" ){
     # get motif number from the filename; Note: important for motif reranking
-    motifNumber <- unlist(strsplit(unlist(strsplit(basename(f),"\\."))[-2],"_motif_"))[-1]    
+    name_parts = unlist(strsplit(unlist(strsplit(basename(f),"\\."))[-2],"_motif_"))
+    motifNumber <- name_parts[length(name_parts)]    
     pwm       <- read_pwm(f, pwm_order, read_order)
-    bg_file   <- paste0(dir, "/", prefix, ".hbcp")
+    bg_file   <- Sys.glob(paste0(dir, "/", prefix, "*", ".hbcp"))
     bg        <- read_bg(bg_file, read_order, dim(pwm[[1]])[1])
   }
   
