@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 '''
 This is a script to convert PWMs from a MEME-formated file to BaMM-formated files.
 The only input is a MEME-formated file (version 4)
@@ -12,19 +14,16 @@ import numpy as np
 def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('meme_file')
-
     return parser
 
 def main():
     parser = create_parser()
     args = parser.parse_args()
-
     ipath = args.meme_file
     dir = os.path.dirname(ipath)
     basename = os.path.splitext(os.path.basename(ipath))[0]
     motifset = parse_meme(ipath)
     models = motifset['models']
-
     for num in range(len(models)):
         filepath_v = dir + '/' + basename + "_motif_" + str(num+1) + ".ihbcp"
         filepath_p = dir + '/' + basename + "_motif_" + str(num+1) + ".ihbp"
@@ -32,28 +31,21 @@ def main():
         write_bamm(models[num]['pwm'], filepath_p )
 
 def parse_meme(meme_input_file):
-
     dataset = {}
-
     with open(meme_input_file) as handle:
         line = handle.readline()
         if line.strip() != 'MEME version 4':
             raise ValueError('requires MEME minimal file format version 4')
         else:
             dataset['version'] = line.strip()
-
         # skip the blank line
         line = handle.readline()
-
         # read in the ALPHABET info
         dataset['alphabet'] = handle.readline().split()[1]
-
         # skip the blank line
         line = handle.readline()
-
         # read in the background letter frequencies
         line = handle.readline()
-
         if line != 'Background letter frequencies\n':
             # if not given, assign 0.25 to each letter
             dataset['bg_freq'] = [0.25,0.25,0.25,0.25]
@@ -61,10 +53,8 @@ def parse_meme(meme_input_file):
             bg_toks = handle.readline().split()[1::2]
             bg_freqs = [float(f) for f in bg_toks]
             dataset['bg_freq'] = bg_freqs
-
         # parse pwms
         width_pat = re.compile('w= (\d+)')
-
         models = []
         for line in handle:
             if line.startswith('MOTIF'):
@@ -78,18 +68,15 @@ def parse_meme(meme_input_file):
                     raise MalformattedMemeError('could not read motif width')
                 pwm_length = int(width_hit.group(1))
                 pwm = []
-
                 for i in range(pwm_length):
                     pwm.append([float(p) for p in handle.readline().split()])
-
                 pwm_arr = np.array(pwm, dtype=float)
                 bg_arr = np.array(bg_freqs, dtype=float)
-
                 model['pwm'] = pwm
-
                 models.append(model)
         dataset['models'] = models
     return dataset
+
 
 def write_bamm(pwm, ofile):
     eps = 1e-16
@@ -100,5 +87,4 @@ def write_bamm(pwm, ofile):
 
 if __name__ == '__main__':
     main()
-
 
