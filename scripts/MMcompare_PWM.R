@@ -282,7 +282,7 @@ shuffle_pwm <- function(pwm){
 }
 
 # run MMCompare for one Query Motif
-MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, pad_underhangs, p_val_limit, min_overlap, alpha, e, outFile, motifNumber ){
+MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, pad_underhangs, e_val_limit, min_overlap, alpha, e, outFile, motifNumber ){
   # add little pseudos to pwm in case the counts are zero to avoid log problems
   pwm[pwm == 0]<-1e-5
   
@@ -334,9 +334,9 @@ MMcompare <- function(pwm,query_name, bg, db_motifs, read_order, shuffle_times, 
   info_real <- info_all[info_all[,"FP"]== 0,]
   
   if(class(info_real) == "matrix"){
-    best_matches = info_real[which(as.numeric(info_real[,"p-value"])<= p_val_limit),]  
+    best_matches = info_real[which(as.numeric(info_real[,"e-value"])<= e_val_limit),]  
   }else{
-    best_matches = info_real[which(as.numeric(info_real["p-value"])<= p_val_limit)]  
+    best_matches = info_real[which(as.numeric(info_real["e-value"])<= e_val_limit)]  
   }
   
   
@@ -378,7 +378,6 @@ db_file_pattern_ending=".ihbcp"
 read_order     <- 0
 shuffle_times  <- 20
 pad_underhangs <- TRUE
-#p_val_limit    <- 0.01
 min_overlap    <- 4
 alpha          <- 1
 e              <- 1e-5
@@ -397,7 +396,7 @@ parser$add_argument("--readOrder",   type="integer",   default=0,  help="order o
 # optional arguments for parameter settings
 parser$add_argument("--sampling",    type="integer", default=20,   help="number of sampled query motifs to calulate p-value" )
 parser$add_argument("--padding",     type="logical", default=TRUE, help="boolean, if underhangs due to shifting should be padded" )
-parser$add_argument("--pValue",      type="double",  default=0.01, help="limit for reporting motif-motif comparisons" )
+parser$add_argument("--max_evalue",      type="double",  default=1, help="limit for reporting motif-motif comparisons" )
 parser$add_argument("--minOverlap",  type="integer", default=4,    help="minimum overlap between query and db motif" )
 parser$add_argument("--alpha",       type="double",  default=1,    help="weighting of the motif strength in the overall score" )
 parser$add_argument("--epsilon",     type="double",  default=1e-5, help="small factor to avoid division by 0 " )
@@ -409,7 +408,7 @@ pwm_order      <- args$qOrder
 read_order     <- args$readOrder
 shuffle_times  <- args$sampling
 pad_underhangs <- args$padding
-p_val_limit    <- args$pValue
+e_val_limit    <- args$max_evalue
 min_overlap    <- args$minOverlap
 alpha          <- args$alpha
 e              <- args$epsilon
@@ -452,7 +451,7 @@ for (f in infiles) {
       counter = counter + 1
       motifNumber = counter
     }
-    MMcompare(pwm[[name]],prefix, bg, db_motifs, read_order, shuffle_times, pad_underhangs, p_val_limit, min_overlap, alpha, e, outFile, motifNumber)
+    MMcompare(pwm[[name]],prefix, bg, db_motifs, read_order, shuffle_times, pad_underhangs, e_val_limit, min_overlap, alpha, e, outFile, motifNumber)
   }
   
 }   
