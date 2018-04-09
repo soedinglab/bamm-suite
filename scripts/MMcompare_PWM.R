@@ -401,6 +401,7 @@ parser$add_argument("--pValue",      type="double",  default=0.01, help="limit f
 parser$add_argument("--minOverlap",  type="integer", default=4,    help="minimum overlap between query and db motif" )
 parser$add_argument("--alpha",       type="double",  default=1,    help="weighting of the motif strength in the overall score" )
 parser$add_argument("--epsilon",     type="double",  default=1e-5, help="small factor to avoid division by 0 " )
+parser$add_argument("--meme-files", action="store_true", help="read in meme files" )
 
 args           <- parser$parse_args()
 db_folder      <- args$dbDir
@@ -413,16 +414,21 @@ p_val_limit    <- args$pValue
 min_overlap    <- args$minOverlap
 alpha          <- args$alpha
 e              <- args$epsilon
+meme_files     <- args$meme_files
 
 # interpret the arguments
 dir 	<- args$maindir
 prefix 	<- args$prefix
 outFile   <- paste(dir, '/', prefix, ".mmcomp", sep = "" )
 
-pwms_in <- Sys.glob(paste0(dir, "/", prefix, "*", ".meme"))
-bamms_in <- Sys.glob(paste0(dir, "/", prefix, "*", ".ihbcp"))
-infiles <- c(pwms_in,bamms_in)
+if(meme_files) {
+    infiles <- Sys.glob(paste0(dir, "/", prefix, "*", ".meme"))
+} else {
+    infiles <- Sys.glob(paste0(dir, "/", prefix, "*", ".ihbcp"))
+}
+
 ending <- unlist(strsplit(infiles[1], "\\."))[-1]
+
 
 for (f in infiles) {
   if( unlist(strsplit(f, "\\."))[-1] == "ihbcp" ){
