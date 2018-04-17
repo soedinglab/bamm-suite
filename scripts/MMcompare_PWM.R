@@ -157,7 +157,7 @@ read_db_folder <- function(db_folder, db_order, read_order){
   db_pwms = list()
   for(i in c(1:length(db_files))){
     db_pwms[i] = read_pwm(db_files[i], db_order, read_order)
-    names(db_pwms)[i] <- paste0(unlist(strsplit(basename(db_files[i]),"_"))[1], collapse="_")
+    names(db_pwms)[i] <- paste0(unlist(strsplit(basename(db_files[i]),"_motif_"))[1], collapse="_")
   }
   return(db_pwms)
 }
