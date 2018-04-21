@@ -3,6 +3,7 @@
 options(warn = -1)
 suppressMessages(library( rtfbs ))
 suppressMessages(library( argparse ))
+set.seed(42)
 
 ### read in meme formated files using rtfbs package
 read_meme <- function(pwm_file){
