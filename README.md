@@ -1,4 +1,8 @@
 # About BaMM-suite
+[![License](https://img.shields.io/github/license/soedinglab/bamm-suite.svg)](https://choosealicense.com/licenses/gpl-3.0/)
+[![Issues](https://img.shields.io/github/issues/soedinglab/bamm-suite.svg)](https://github.com/soedinglab/bamm-suite/issues)
+
+
 BaMM-suite is the motif finding suite developed by the Soedinglab.
 
 This repository is the entry point to the BaMM universe. Here you can find documentation, common functionality and helper scripts and a clean interface into the BaMM world.
@@ -47,4 +51,4 @@ An html version of the documentation can be built by running following commands 
 BaMM-suite installs the command line script `bamm`. Run `bamm --help` for a list of available submodules.
 
 # License
-bamm-wrapper is licensed under the [GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/).
+BaMM-suite is licensed under the [GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/).
