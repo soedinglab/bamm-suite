@@ -397,11 +397,11 @@ parser$add_argument("--readOrder",   type="integer",   default=0,  help="order o
 # optional arguments for parameter settings
 parser$add_argument("--sampling",    type="integer", default=20,   help="number of sampled query motifs to calulate p-value" )
 parser$add_argument("--padding",     type="logical", default=TRUE, help="boolean, if underhangs due to shifting should be padded" )
-parser$add_argument("--max_evalue",      type="double",  default=1, help="limit for reporting motif-motif comparisons" )
+parser$add_argument("--max_evalue",  type="double",  default=1,    help="limit for reporting motif-motif comparisons" )
 parser$add_argument("--minOverlap",  type="integer", default=4,    help="minimum overlap between query and db motif" )
 parser$add_argument("--alpha",       type="double",  default=1,    help="weighting of the motif strength in the overall score" )
 parser$add_argument("--epsilon",     type="double",  default=1e-5, help="small factor to avoid division by 0 " )
-parser$add_argument("--meme-files", action="store_true", help="read in meme files" )
+parser$add_argument("--meme-files",  action="store_true",          help="read in meme files" )
 
 args           <- parser$parse_args()
 db_folder      <- args$dbDir
@@ -419,32 +419,29 @@ meme_files     <- args$meme_files
 # interpret the arguments
 dir 	<- args$maindir
 prefix 	<- args$prefix
-outFile   <- paste(dir, '/', prefix, ".mmcomp", sep = "" )
+outFile <- paste(dir, '/', prefix, ".mmcomp", sep = "" )
 
 if(meme_files) {
-    infiles <- Sys.glob(paste0(dir, "/", prefix, "*", ".meme"))
+    ending = "meme"
 } else {
-    infiles <- Sys.glob(paste0(dir, "/", prefix, "*", ".ihbcp"))
+    ending = "ihbcp"
+    bg_file <- Sys.glob(paste0(dir, "/", prefix, "*", ".hbcp"))
 }
 
-ending <- unlist(strsplit(infiles[1], "\\."))[-1]
-
+infiles <- Sys.glob(paste0(dir, "/", prefix, "*", ending))
 
 for (f in infiles) {
-  if( unlist(strsplit(f, "\\."))[-1] == "ihbcp" ){
+  if( ending == "ihbcp" ){
     # get motif number from the filename; Note: important for motif reranking
-    file_stem = gsub(pattern = "\\.[^.]*$", "", basename(f))
-    name_parts = unlist(strsplit(file_stem, '_motif_'))
+    file_stem   = gsub(pattern = "\\.[^.]*$", "", basename(f))
+    name_parts  = unlist(strsplit(file_stem, '_motif_'))
     motifNumber <- name_parts[length(name_parts)]    
-    pwm       <- read_pwm(f, pwm_order, read_order)
-    bg_file   <- Sys.glob(paste0(dir, "/", prefix, "*", ".hbcp"))
-    bg        <- read_bg(bg_file, read_order, dim(pwm[[1]])[1])
-  }
-  
-  if(unlist(strsplit(f, "\\."))[-1] == "meme"  ){
-    info = read_meme(f)
-    pwm = info[[1]]
-    bg = info[[2]]
+    pwm         <- read_pwm(f, pwm_order, read_order)
+    bg          <- read_bg(bg_file, read_order, dim(pwm[[1]])[1])
+  } else if( ending == "meme" ){
+    info    = read_meme(f)
+    pwm     = info[[1]]
+    bg      = info[[2]]
   }
   
   if(db_folder != "NA"){
@@ -455,7 +452,7 @@ for (f in infiles) {
   }
   counter = 0
   for(name in names(pwm)){
-    if( ending == 'meme'){
+    if( ending == "meme"){
       counter = counter + 1
       motifNumber = counter
     }
