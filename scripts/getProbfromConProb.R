@@ -42,7 +42,8 @@ for( file in Sys.glob(paste(c(maindir, '/', file_prefix, "*", file_suffix), coll
     if(!file.exists(file)){
         print("file does not exist.")
     }
-   outfile = paste0(maindir, "/", unlist(strsplit(basename(file), "\\."))[1], ".ihbp")
+    file_stem <- tools::file_path_sans_ext(basename(file))
+    outfile = paste0(maindir, "/", file_stem, ".ihbp")
   
     # get motif number from the filename
     motif_id <- sub(paste(c(maindir, '/', file_prefix), collapse=""), "", file)
