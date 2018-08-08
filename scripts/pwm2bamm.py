@@ -11,6 +11,7 @@ import os
 import re
 import numpy as np
 
+
 def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('meme_file')
@@ -35,6 +36,13 @@ def main():
         filepath_p = os.path.join(dir, basename + "_motif_" + str(num+1) + ".ihbp")
         write_bamm(models[num]['pwm'], filepath_v )
         write_bamm(models[num]['pwm'], filepath_p )
+
+    bg_cond_file = os.path.join(dir, basename + ".hbcp")
+    write_bg_bamm(motifset['bg_freq'], bg_cond_file)
+
+    bg_joint_file = os.path.join(dir, basename + ".hbp")
+    write_bg_bamm(motifset['bg_freq'], bg_joint_file)
+
 
 def parse_meme(meme_input_file):
     dataset = {}
@@ -85,12 +93,23 @@ def parse_meme(meme_input_file):
     return dataset
 
 
+def write_bg_bamm(probs, output_file):
+    with open(output_file, 'w') as out:
+        print('# K = 0', file=out)
+        print('# A = 1', file=out)
+        print(' '.join(str(s) for s in probs), file=out)
+
+
 def write_bamm(pwm, ofile):
     eps = 1e-16
     with open(ofile, "w") as fh:
         for i in range(len(pwm)):
             print(' '.join(['{:.4e}'.format(x+eps) for x in pwm[i]]) + ' \n', file=fh)
  
+
+class MalformattedMemeError(Exception):
+    pass
+
 
 if __name__ == '__main__':
     main()

@@ -29,6 +29,7 @@ file_prefix <- args$prefix
 #maindir = "/Users/Anju/WORK/media_db/jobs/afbd092c-bd94-4637-89e1-4f526017a38e/Output/"
 #file_prefix = 'ExampleFirstOrder_motif_1'
 
+maindir <- gsub('/$', '', maindir)
 #-----------------------------
 #
 # Read in the file
@@ -41,14 +42,15 @@ for( file in Sys.glob(paste(c(maindir, '/', file_prefix, "*", file_suffix), coll
     if(!file.exists(file)){
         print("file does not exist.")
     }
-   outfile = paste0(maindir, "/", unlist(strsplit(basename(file), "\\."))[1], ".ihbp")
+    file_stem <- tools::file_path_sans_ext(basename(file))
+    outfile = paste0(maindir, "/", file_stem, ".ihbp")
   
     # get motif number from the filename
     motif_id <- sub(paste(c(maindir, '/', file_prefix), collapse=""), "", file)
     motif_id <- sub(file_suffix, "", motif_id)
 
     # get a filename for each motif
-    filename = paste0(c(maindir, file_prefix, motif_id, file_suffix), collapse="")
+    filename = paste0(c(maindir, '/', file_prefix, motif_id, file_suffix), collapse="")
     # read in the data
     cond_probs <- read.table(filename,
                         fileEncoding="latin1", as.is=TRUE, na.strings = "NA",
